@@ -1,0 +1,206 @@
+[ {
+  "purl" : "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1",
+  "vulnerabilities" : [ {
+    "id" : "CVE-2021-44228",
+    "source" : "OSS Index (Mock)",
+    "severity" : "CRITICAL",
+    "cvssScore" : 10.0,
+    "description" : "Log4Shell - Remote Code Execution",
+    "referenceUrl" : "https://nvd.nist.gov/vuln/detail/CVE-2021-44228"
+  } ],
+  "lifecycleData" : {
+    "product" : "log4j",
+    "version" : "2.14.1",
+    "eolDate" : null,
+    "latestVersion" : "2.25.3",
+    "eol" : false
+  },
+  "riskScore" : 100,
+  "highCount" : 0,
+  "riskLevelName" : "ðŸ”´ Critical",
+  "notes" : "Contains severe vulnerabilities, patch immediately"
+}, {
+  "purl" : "pkg:maven/org.springframework.boot/spring-boot@1.5.0.RELEASE",
+  "vulnerabilities" : [ ],
+  "lifecycleData" : {
+    "product" : "spring-boot",
+    "version" : "1.5.0.RELEASE",
+    "eolDate" : "2019-08-06",
+    "latestVersion" : "4.0.3",
+    "eol" : true
+  },
+  "riskScore" : 75,
+  "highCount" : 0,
+  "riskLevelName" : "ðŸ”´ High",
+  "notes" : "Upgrade to supported major version"
+}, {
+  "purl" : "pkg:maven/org.slf4j/jul-to-slf4j@1.7.22",
+  "vulnerabilities" : [ ],
+  "lifecycleData" : null,
+  "riskScore" : 0,
+  "highCount" : 0,
+  "riskLevelName" : "ðŸŸ¢ Low",
+  "notes" : "Up to date"
+}, {
+  "purl" : "pkg:maven/org.springframework/spring-expression@4.3.6.RELEASE",
+  "vulnerabilities" : [ ],
+  "lifecycleData" : {
+    "product" : "spring-framework",
+    "version" : "4.3.6.RELEASE",
+    "eolDate" : "2020-12-31",
+    "latestVersion" : "7.0.5",
+    "eol" : true
+  },
+  "riskScore" : 75,
+  "highCount" : 0,
+  "riskLevelName" : "ðŸ”´ High",
+  "notes" : "Upgrade to supported major version"
+}, {
+  "purl" : "pkg:maven/org.slf4j/log4j-over-slf4j@1.7.22",
+  "vulnerabilities" : [ ],
+  "lifecycleData" : {
+    "product" : "log4j",
+    "version" : "1.7.22",
+    "eolDate" : "2015-10-15",
+    "latestVersion" : "2.25.3",
+    "eol" : true
+  },
+  "riskScore" : 75,
+  "highCount" : 0,
+  "riskLevelName" : "ðŸ”´ High",
+  "notes" : "Upgrade to supported major version"
+}, {
+  "purl" : "pkg:maven/org.springframework/spring-aop@4.3.6.RELEASE",
+  "vulnerabilities" : [ ],
+  "lifecycleData" : {
+    "product" : "spring-framework",
+    "version" : "4.3.6.RELEASE",
+    "eolDate" : "2020-12-31",
+    "latestVersion" : "7.0.5",
+    "eol" : true
+  },
+  "riskScore" : 75,
+  "highCount" : 0,
+  "riskLevelName" : "ðŸ”´ High",
+  "notes" : "Upgrade to supported major version"
+}, {
+  "purl" : "pkg:maven/org.springframework/spring-beans@4.3.6.RELEASE",
+  "vulnerabilities" : [ ],
+  "lifecycleData" : {
+    "product" : "spring-framework",
+    "version" : "4.3.6.RELEASE",
+    "eolDate" : "2020-12-31",
+    "latestVersion" : "7.0.5",
+    "eol" : true
+  },
+  "riskScore" : 75,
+  "highCount" : 0,
+  "riskLevelName" : "ðŸ”´ High",
+  "notes" : "Upgrade to supported major version"
+}, {
+  "purl" : "pkg:maven/org.springframework/spring-core@4.3.6.RELEASE",
+  "vulnerabilities" : [ ],
+  "lifecycleData" : {
+    "product" : "spring-framework",
+    "version" : "4.3.6.RELEASE",
+    "eolDate" : "2020-12-31",
+    "latestVersion" : "7.0.5",
+    "eol" : true
+  },
+  "riskScore" : 75,
+  "highCount" : 0,
+  "riskLevelName" : "ðŸ”´ High",
+  "notes" : "Upgrade to supported major version"
+}, {
+  "purl" : "pkg:maven/org.springframework.boot/spring-boot-starter-logging@1.5.0.RELEASE",
+  "vulnerabilities" : [ ],
+  "lifecycleData" : null,
+  "riskScore" : 0,
+  "highCount" : 0,
+  "riskLevelName" : "ðŸŸ¢ Low",
+  "notes" : "Up to date"
+}, {
+  "purl" : "pkg:maven/org.springframework.boot/spring-boot-autoconfigure@1.5.0.RELEASE",
+  "vulnerabilities" : [ ],
+  "lifecycleData" : null,
+  "riskScore" : 0,
+  "highCount" : 0,
+  "riskLevelName" : "ðŸŸ¢ Low",
+  "notes" : "Up to date"
+}, {
+  "purl" : "pkg:maven/ch.qos.logback/logback-classic@1.1.9",
+  "vulnerabilities" : [ ],
+  "lifecycleData" : null,
+  "riskScore" : 0,
+  "highCount" : 0,
+  "riskLevelName" : "ðŸŸ¢ Low",
+  "notes" : "Up to date"
+}, {
+  "purl" : "pkg:maven/ch.qos.logback/logback-core@1.1.9",
+  "vulnerabilities" : [ ],
+  "lifecycleData" : null,
+  "riskScore" : 0,
+  "highCount" : 0,
+  "riskLevelName" : "ðŸŸ¢ Low",
+  "notes" : "Up to date"
+}, {
+  "purl" : "pkg:maven/org.apache.logging.log4j/log4j-api@2.14.1",
+  "vulnerabilities" : [ ],
+  "lifecycleData" : {
+    "product" : "log4j",
+    "version" : "2.14.1",
+    "eolDate" : null,
+    "latestVersion" : "2.25.3",
+    "eol" : false
+  },
+  "riskScore" : 0,
+  "highCount" : 0,
+  "riskLevelName" : "ðŸŸ¢ Low",
+  "notes" : "Safe but outdated"
+}, {
+  "purl" : "pkg:maven/org.yaml/snakeyaml@1.17",
+  "vulnerabilities" : [ ],
+  "lifecycleData" : null,
+  "riskScore" : 0,
+  "highCount" : 0,
+  "riskLevelName" : "ðŸŸ¢ Low",
+  "notes" : "Up to date"
+}, {
+  "purl" : "pkg:maven/org.springframework/spring-context@4.3.6.RELEASE",
+  "vulnerabilities" : [ ],
+  "lifecycleData" : {
+    "product" : "spring-framework",
+    "version" : "4.3.6.RELEASE",
+    "eolDate" : "2020-12-31",
+    "latestVersion" : "7.0.5",
+    "eol" : true
+  },
+  "riskScore" : 75,
+  "highCount" : 0,
+  "riskLevelName" : "ðŸ”´ High",
+  "notes" : "Upgrade to supported major version"
+}, {
+  "purl" : "pkg:maven/org.springframework.boot/spring-boot-starter@1.5.0.RELEASE",
+  "vulnerabilities" : [ ],
+  "lifecycleData" : null,
+  "riskScore" : 0,
+  "highCount" : 0,
+  "riskLevelName" : "ðŸŸ¢ Low",
+  "notes" : "Up to date"
+}, {
+  "purl" : "pkg:maven/org.slf4j/jcl-over-slf4j@1.7.22",
+  "vulnerabilities" : [ ],
+  "lifecycleData" : null,
+  "riskScore" : 0,
+  "highCount" : 0,
+  "riskLevelName" : "ðŸŸ¢ Low",
+  "notes" : "Up to date"
+}, {
+  "purl" : "pkg:maven/org.slf4j/slf4j-api@2.0.7",
+  "vulnerabilities" : [ ],
+  "lifecycleData" : null,
+  "riskScore" : 0,
+  "highCount" : 0,
+  "riskLevelName" : "ðŸŸ¢ Low",
+  "notes" : "Up to date"
+} ]

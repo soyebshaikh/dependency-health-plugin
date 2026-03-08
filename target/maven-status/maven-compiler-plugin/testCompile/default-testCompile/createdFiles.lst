@@ -1,0 +1,3 @@
+com\dependencyhealth\visualization\VisualizationComponentsTest.class
+com\dependencyhealth\vulnerability\OssIndexClientTest.class
+com\dependencyhealth\risk\RiskAnalysisServiceTest.class

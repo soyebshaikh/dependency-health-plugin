@@ -1,0 +1,169 @@
+{
+  "bomFormat" : "CycloneDX",
+  "specVersion" : "1.4",
+  "version" : 1,
+  "metadata" : {
+    "timestamp" : "2026-03-08T15:35:36Z",
+    "tools" : [
+      {
+        "vendor" : "DependencyHealth",
+        "name" : "DependencyHealthMavenPlugin",
+        "version" : "1.0.0"
+      }
+    ],
+    "component" : {
+      "group" : "com.example.test",
+      "name" : "dependency-health-test",
+      "version" : "1.0.0-SNAPSHOT",
+      "purl" : "pkg:maven/com.example.test/dependency-health-test@1.0.0-SNAPSHOT",
+      "type" : "library",
+      "bom-ref" : "pkg:maven/com.example.test/dependency-health-test@1.0.0-SNAPSHOT"
+    }
+  },
+  "components" : [
+    {
+      "group" : "org.apache.logging.log4j",
+      "name" : "log4j-core",
+      "version" : "2.14.1",
+      "purl" : "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1",
+      "type" : "library",
+      "bom-ref" : "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1"
+    },
+    {
+      "group" : "org.apache.logging.log4j",
+      "name" : "log4j-api",
+      "version" : "2.14.1",
+      "purl" : "pkg:maven/org.apache.logging.log4j/log4j-api@2.14.1",
+      "type" : "library",
+      "bom-ref" : "pkg:maven/org.apache.logging.log4j/log4j-api@2.14.1"
+    },
+    {
+      "group" : "org.springframework.boot",
+      "name" : "spring-boot-starter",
+      "version" : "1.5.0.RELEASE",
+      "purl" : "pkg:maven/org.springframework.boot/spring-boot-starter@1.5.0.RELEASE",
+      "type" : "library",
+      "bom-ref" : "pkg:maven/org.springframework.boot/spring-boot-starter@1.5.0.RELEASE"
+    },
+    {
+      "group" : "org.springframework.boot",
+      "name" : "spring-boot",
+      "version" : "1.5.0.RELEASE",
+      "purl" : "pkg:maven/org.springframework.boot/spring-boot@1.5.0.RELEASE",
+      "type" : "library",
+      "bom-ref" : "pkg:maven/org.springframework.boot/spring-boot@1.5.0.RELEASE"
+    },
+    {
+      "group" : "org.springframework",
+      "name" : "spring-context",
+      "version" : "4.3.6.RELEASE",
+      "purl" : "pkg:maven/org.springframework/spring-context@4.3.6.RELEASE",
+      "type" : "library",
+      "bom-ref" : "pkg:maven/org.springframework/spring-context@4.3.6.RELEASE"
+    },
+    {
+      "group" : "org.springframework",
+      "name" : "spring-aop",
+      "version" : "4.3.6.RELEASE",
+      "purl" : "pkg:maven/org.springframework/spring-aop@4.3.6.RELEASE",
+      "type" : "library",
+      "bom-ref" : "pkg:maven/org.springframework/spring-aop@4.3.6.RELEASE"
+    },
+    {
+      "group" : "org.springframework",
+      "name" : "spring-beans",
+      "version" : "4.3.6.RELEASE",
+      "purl" : "pkg:maven/org.springframework/spring-beans@4.3.6.RELEASE",
+      "type" : "library",
+      "bom-ref" : "pkg:maven/org.springframework/spring-beans@4.3.6.RELEASE"
+    },
+    {
+      "group" : "org.springframework",
+      "name" : "spring-expression",
+      "version" : "4.3.6.RELEASE",
+      "purl" : "pkg:maven/org.springframework/spring-expression@4.3.6.RELEASE",
+      "type" : "library",
+      "bom-ref" : "pkg:maven/org.springframework/spring-expression@4.3.6.RELEASE"
+    },
+    {
+      "group" : "org.springframework.boot",
+      "name" : "spring-boot-autoconfigure",
+      "version" : "1.5.0.RELEASE",
+      "purl" : "pkg:maven/org.springframework.boot/spring-boot-autoconfigure@1.5.0.RELEASE",
+      "type" : "library",
+      "bom-ref" : "pkg:maven/org.springframework.boot/spring-boot-autoconfigure@1.5.0.RELEASE"
+    },
+    {
+      "group" : "org.springframework.boot",
+      "name" : "spring-boot-starter-logging",
+      "version" : "1.5.0.RELEASE",
+      "purl" : "pkg:maven/org.springframework.boot/spring-boot-starter-logging@1.5.0.RELEASE",
+      "type" : "library",
+      "bom-ref" : "pkg:maven/org.springframework.boot/spring-boot-starter-logging@1.5.0.RELEASE"
+    },
+    {
+      "group" : "ch.qos.logback",
+      "name" : "logback-classic",
+      "version" : "1.1.9",
+      "purl" : "pkg:maven/ch.qos.logback/logback-classic@1.1.9",
+      "type" : "library",
+      "bom-ref" : "pkg:maven/ch.qos.logback/logback-classic@1.1.9"
+    },
+    {
+      "group" : "ch.qos.logback",
+      "name" : "logback-core",
+      "version" : "1.1.9",
+      "purl" : "pkg:maven/ch.qos.logback/logback-core@1.1.9",
+      "type" : "library",
+      "bom-ref" : "pkg:maven/ch.qos.logback/logback-core@1.1.9"
+    },
+    {
+      "group" : "org.slf4j",
+      "name" : "jcl-over-slf4j",
+      "version" : "1.7.22",
+      "purl" : "pkg:maven/org.slf4j/jcl-over-slf4j@1.7.22",
+      "type" : "library",
+      "bom-ref" : "pkg:maven/org.slf4j/jcl-over-slf4j@1.7.22"
+    },
+    {
+      "group" : "org.slf4j",
+      "name" : "jul-to-slf4j",
+      "version" : "1.7.22",
+      "purl" : "pkg:maven/org.slf4j/jul-to-slf4j@1.7.22",
+      "type" : "library",
+      "bom-ref" : "pkg:maven/org.slf4j/jul-to-slf4j@1.7.22"
+    },
+    {
+      "group" : "org.slf4j",
+      "name" : "log4j-over-slf4j",
+      "version" : "1.7.22",
+      "purl" : "pkg:maven/org.slf4j/log4j-over-slf4j@1.7.22",
+      "type" : "library",
+      "bom-ref" : "pkg:maven/org.slf4j/log4j-over-slf4j@1.7.22"
+    },
+    {
+      "group" : "org.springframework",
+      "name" : "spring-core",
+      "version" : "4.3.6.RELEASE",
+      "purl" : "pkg:maven/org.springframework/spring-core@4.3.6.RELEASE",
+      "type" : "library",
+      "bom-ref" : "pkg:maven/org.springframework/spring-core@4.3.6.RELEASE"
+    },
+    {
+      "group" : "org.yaml",
+      "name" : "snakeyaml",
+      "version" : "1.17",
+      "purl" : "pkg:maven/org.yaml/snakeyaml@1.17",
+      "type" : "library",
+      "bom-ref" : "pkg:maven/org.yaml/snakeyaml@1.17"
+    },
+    {
+      "group" : "org.slf4j",
+      "name" : "slf4j-api",
+      "version" : "2.0.7",
+      "purl" : "pkg:maven/org.slf4j/slf4j-api@2.0.7",
+      "type" : "library",
+      "bom-ref" : "pkg:maven/org.slf4j/slf4j-api@2.0.7"
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+package com.dependencyhealth.risk;
+
+import com.dependencyhealth.lifecycle.LifecycleData;
+import com.dependencyhealth.vulnerability.Vulnerability;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Merged risk profile for a dependency.
+ */
+public class DependencyRiskProfile {
+    private String purl;
+    private List<Vulnerability> vulnerabilities = new ArrayList<>();
+    private LifecycleData lifecycleData;
+    private int riskScore = 0;
+
+    public DependencyRiskProfile(String purl) {
+        this.purl = purl;
+    }
+
+    public void addVulnerability(Vulnerability v) {
+        // Deduplicate
+        boolean exists = vulnerabilities.stream().anyMatch(existing -> existing.getId().equals(v.getId()));
+        if (!exists) {
+            vulnerabilities.add(v);
+            calculateRiskScore();
+        }
+    }
+
+    public void setLifecycleData(LifecycleData data) {
+        this.lifecycleData = data;
+        calculateRiskScore();
+    }
+
+    private void calculateRiskScore() {
+        riskScore = 0;
+        for (Vulnerability v : vulnerabilities) {
+            switch (v.getSeverity().toUpperCase()) {
+                case "CRITICAL": riskScore += 100; break;
+                case "HIGH": riskScore += 50; break;
+                case "MEDIUM": riskScore += 20; break;
+                case "LOW": riskScore += 5; break;
+                default: riskScore += 1;
+            }
+        }
+        if (lifecycleData != null && lifecycleData.isEol()) {
+            riskScore += 75; // EOL is considered highly risky
+        }
+    }
+
+    public String getPurl() {
+        return purl;
+    }
+
+    public List<Vulnerability> getVulnerabilities() {
+        return vulnerabilities;
+    }
+
+    public LifecycleData getLifecycleData() {
+        return lifecycleData;
+    }
+
+    public int getRiskScore() {
+        return riskScore;
+    }
+
+    public boolean hasCritical() {
+        return vulnerabilities.stream().anyMatch(v -> "CRITICAL".equalsIgnoreCase(v.getSeverity()));
+    }
+
+    public long getHighCount() {
+        return vulnerabilities.stream().filter(v -> "HIGH".equalsIgnoreCase(v.getSeverity())).count();
+    }
+
+    public String getRiskLevelName() {
+        if (riskScore >= 100) return "ðŸ”´ Critical";
+        if (riskScore >= 50) return "ðŸ”´ High";
+        if (riskScore >= 20) return "ðŸŸ  Medium";
+        return "ðŸŸ¢ Low";
+    }
+
+    public String getNotes() {
+        if (lifecycleData != null && lifecycleData.isEol()) {
+            return "Upgrade to supported major version";
+        }
+        if (hasCritical() || getHighCount() > 0) {
+            return "Contains severe vulnerabilities, patch immediately";
+        }
+        if (riskScore > 0) {
+            return "Consider updating or reviewing vulnerabilities";
+        }
+        if (lifecycleData != null && lifecycleData.getLatestVersion() != null 
+                && !lifecycleData.getVersion().equals(lifecycleData.getLatestVersion())) {
+            return "Safe but outdated";
+        }
+        return "Up to date";
+    }
+}
