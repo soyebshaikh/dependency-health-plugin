@@ -11,6 +11,7 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
+import org.apache.maven.shared.dependency.graph.DependencyNode;
 import org.apache.maven.artifact.Artifact;
 
 import com.dependencyhealth.dependency.DependencyCollector;
@@ -34,22 +35,25 @@ import com.dependencyhealth.visualization.DependencyGraphModel;
 import com.dependencyhealth.visualization.GraphJsonExporter;
 import com.dependencyhealth.visualization.GraphModelBuilder;
 import com.dependencyhealth.visualization.HtmlGraphRenderer;
-import org.apache.maven.shared.dependency.graph.DependencyNode;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * Enterprise-Grade Maven Dependency Intelligence Plugin
+ * Enterprise-Grade Maven Dependency Intelligence Plugin - Aggregate Goal
+ *
+ * Runs once across all modules in a multi-module project to generate a
+ * singular, aggregated dependency health report.
  */
-@Mojo(name = "scan-dependencies", defaultPhase = LifecyclePhase.VERIFY, requiresDependencyResolution = ResolutionScope.TEST, threadSafe = true)
-public class DependencyHealthScanMojo extends AbstractMojo {
+@Mojo(name = "aggregate", defaultPhase = LifecyclePhase.VERIFY, aggregator = true, requiresDependencyResolution = ResolutionScope.TEST, threadSafe = true)
+public class DependencyHealthAggregateMojo extends AbstractMojo {
 
-    @Parameter(defaultValue = "${project}", readonly = true, required = true)
-    private MavenProject project;
+    @Parameter(defaultValue = "${reactorProjects}", readonly = true, required = true)
+    private List<MavenProject> reactorProjects;
 
     @Parameter(defaultValue = "${session}", readonly = true, required = true)
     private MavenSession session;
@@ -81,36 +85,57 @@ public class DependencyHealthScanMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (skipScan) {
-            getLog().info("Dependency Health Scan skipped.");
+            getLog().info("Dependency Health Aggregate Scan skipped.");
             return;
         }
 
         getLog().info("------------------------------------------------------------------------");
-        getLog().info("Starting Dependency Health Scan...");
+        getLog().info("Starting Aggregated Dependency Health Scan...");
         getLog().info("------------------------------------------------------------------------");
-        getLog().info("Project: " + project.getGroupId() + ":" + project.getArtifactId() + ":" + project.getVersion());
+
+        if (reactorProjects == null || reactorProjects.isEmpty()) {
+            getLog().info("No reactor projects found.");
+            return;
+        }
 
         long startTime = System.currentTimeMillis();
 
         try {
-            // 1. Collect Dependencies
-            getLog().info("Step 1: Collecting dependencies...");
-            DependencyCollector collector = new DependencyCollector(project, session, dependencyGraphBuilder);
-            Set<Artifact> dependencies = collector.getAllDependencies();
-            DependencyNode rootNode = collector.buildDependencyGraph();
-            getLog().info("Found " + dependencies.size() + " dependencies.");
+            // 1. Collect Dependencies across all modules
+            getLog().info("Step 1: Collecting dependencies from all reactor projects...");
+            Set<Artifact> allDependencies = new HashSet<>();
+            List<DependencyNode> rootNodes = new ArrayList<>();
+
+            MavenProject rootProject = reactorProjects.get(0);
+
+            for (MavenProject proj : reactorProjects) {
+                DependencyCollector collector = new DependencyCollector(proj, session, dependencyGraphBuilder);
+                allDependencies.addAll(collector.getAllDependencies());
+                try {
+                    rootNodes.add(collector.buildDependencyGraph());
+                } catch (Exception e) {
+                    getLog().warn("Could not build dependency graph for project: " + proj.getName());
+                }
+            }
+
+            getLog().info("Found " + allDependencies.size() + " unique dependencies across " + reactorProjects.size()
+                    + " modules.");
+
+            if (!outputDirectory.exists()) {
+                outputDirectory.mkdirs();
+            }
 
             // 2. Generate SBOM
-            getLog().info("Step 2: Generating SBOM...");
+            getLog().info("Step 2: Generating Aggregated SBOM...");
             SbomGenerator sbomGenerator = new SbomGenerator();
             File sbomFile = new File(outputDirectory, "dependency-sbom.json");
             sbomGenerator.generateSbom(
-                    project.getGroupId(),
-                    project.getArtifactId(),
-                    project.getVersion(),
-                    dependencies,
+                    rootProject.getGroupId(),
+                    rootProject.getArtifactId() + "-aggregate",
+                    rootProject.getVersion(),
+                    allDependencies,
                     sbomFile);
-            getLog().info("SBOM saved to: " + sbomFile.getAbsolutePath());
+            getLog().info("Aggregated SBOM saved to: " + sbomFile.getAbsolutePath());
 
             // 3. Vulnerability Intelligence
             getLog().info("Step 3: Querying vulnerability intelligence APIs...");
@@ -123,8 +148,7 @@ public class DependencyHealthScanMojo extends AbstractMojo {
             java.util.HashMap<String, List<Vulnerability>> aggregatedVulns = new java.util.HashMap<>();
             for (VulnerabilityClient client : vulnClients) {
                 getLog().info(" - Querying " + client.getProviderName() + "...");
-                Map<String, List<Vulnerability>> clientResults = client.checkVulnerabilities(dependencies);
-                // Merge results
+                Map<String, List<Vulnerability>> clientResults = client.checkVulnerabilities(allDependencies);
                 clientResults.forEach((purl, vulns) -> {
                     aggregatedVulns.computeIfAbsent(purl, k -> new ArrayList<>()).addAll(vulns);
                 });
@@ -134,40 +158,40 @@ public class DependencyHealthScanMojo extends AbstractMojo {
             getLog().info("Step 4: Querying lifecycle intelligence APIs...");
             getLog().info(" - API: endoflife.date (https://endoflife.date/api)");
             LifecycleClient eolClient = new EolClient();
-            Map<String, LifecycleData> lifecycleDataMap = eolClient.checkLifecycle(dependencies);
+            Map<String, LifecycleData> lifecycleDataMap = eolClient.checkLifecycle(allDependencies);
             
             // 4.5 Latest Version Check
             getLog().info("Step 4.5: Resolving latest versions from Maven Central...");
             MavenSearchClient searchClient = new MavenSearchClient();
-            Map<String, String> latestVersionsMap = searchClient.getLatestVersions(dependencies);
+            Map<String, String> latestVersionsMap = searchClient.getLatestVersions(allDependencies);
 
             // 5. Risk Aggregation
             getLog().info("Step 5: Aggregating risk intelligence...");
             RiskAnalysisService riskService = new RiskAnalysisService();
-            Map<String, DependencyRiskProfile> riskProfiles = riskService.analyzeRisk(dependencies, aggregatedVulns,
+            Map<String, DependencyRiskProfile> riskProfiles = riskService.analyzeRisk(allDependencies, aggregatedVulns,
                     lifecycleDataMap, latestVersionsMap);
 
             // 6. Report Generation
-            getLog().info("Step 6: Generating reports...");
+            getLog().info("Step 6: Generating aggregated reports...");
             ConsoleReporter consoleReporter = new ConsoleReporter(getLog());
             consoleReporter.generateReport(riskProfiles);
 
             HtmlReportGenerator htmlReporter = new HtmlReportGenerator();
             File htmlReportFile = new File(outputDirectory, "dependency-health-report.html");
             htmlReporter.generateReport(riskProfiles, htmlReportFile);
-            getLog().info("HTML Report saved to: " + htmlReportFile.getAbsolutePath());
+            getLog().info("Aggregated HTML Report saved to: " + htmlReportFile.getAbsolutePath());
 
             JsonReportGenerator jsonReporter = new JsonReportGenerator();
             File jsonReportFile = new File(outputDirectory, "dependency-health-report.json");
             jsonReporter.generateReport(riskProfiles, jsonReportFile);
-            getLog().info("JSON Report saved to: " + jsonReportFile.getAbsolutePath());
+            getLog().info("Aggregated JSON Report saved to: " + jsonReportFile.getAbsolutePath());
 
             // 6.5 Optional Visualization
             if (enableGraphVisualization) {
                 getLog().info("Step 6.5: Generating Interactive Dependency Graph Visualization...");
                 try {
                     GraphModelBuilder graphBuilder = new GraphModelBuilder();
-                    DependencyGraphModel graphModel = graphBuilder.buildGraph(rootNode, riskProfiles);
+                    DependencyGraphModel graphModel = graphBuilder.buildAggregateGraph(rootNodes, riskProfiles);
 
                     BlastRadiusAnalyzer blastRadiusAnalyzer = new BlastRadiusAnalyzer();
                     blastRadiusAnalyzer.analyzeAndTagBlastRadius(graphModel);
@@ -179,9 +203,10 @@ public class DependencyHealthScanMojo extends AbstractMojo {
                     File graphHtmlFile = new File(outputDirectory, "dependency-graph.html");
                     htmlRenderer.renderHtml(graphJson, graphHtmlFile);
 
-                    getLog().info("Dependency Graph Visualization saved to: " + graphHtmlFile.getAbsolutePath());
+                    getLog().info(
+                            "Aggregated Dependency Graph Visualization saved to: " + graphHtmlFile.getAbsolutePath());
                 } catch (Exception e) {
-                    getLog().warn("Failed to generate dependency graph visualization: " + e.getMessage());
+                    getLog().warn("Failed to generate aggregated dependency graph visualization: " + e.getMessage());
                 }
             } else {
                 getLog().debug("Graph Visualization is disabled. Skipping.");
@@ -194,32 +219,12 @@ public class DependencyHealthScanMojo extends AbstractMojo {
 
             long duration = System.currentTimeMillis() - startTime;
             getLog().info("------------------------------------------------------------------------");
-            getLog().info("Dependency Health Scan completed in " + duration + " ms.");
+            getLog().info("Dependency Health Aggregate Scan completed in " + duration + " ms.");
             getLog().info("------------------------------------------------------------------------");
 
         } catch (Exception e) {
-            getLog().error("Failed to execute Dependency Health Scan", e);
-            throw new MojoExecutionException("Error during dependency scanning: " + e.getMessage(), e);
+            getLog().error("Failed to execute Aggregated Dependency Health Scan", e);
+            throw new MojoExecutionException("Error during aggregated dependency scanning: " + e.getMessage(), e);
         }
-    }
-
-    public MavenProject getProject() {
-        return project;
-    }
-
-    public boolean isFailOnCritical() {
-        return failOnCritical;
-    }
-
-    public int getFailOnHighCount() {
-        return failOnHighCount;
-    }
-
-    public boolean isFailOnEol() {
-        return failOnEol;
-    }
-
-    public File getOutputDirectory() {
-        return outputDirectory;
     }
 }

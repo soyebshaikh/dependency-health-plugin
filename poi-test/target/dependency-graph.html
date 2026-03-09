@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dependency Risk Graph</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #ffffff; margin: 0; padding: 0; overflow: hidden; }
+        #legend { position: absolute; top: 10px; left: 10px; background: rgba(30,30,30,0.8); padding: 15px; border-radius: 8px; border: 1px solid #333; }
+        .legend-item { display: flex; align-items: center; margin-bottom: 5px; font-size: 14px; }
+        .color-box { width: 16px; height: 16px; margin-right: 10px; border-radius: 3px; }
+        .tooltip { position: absolute; background: #fff; color: #000; padding: 10px; border-radius: 4px; pointer-events: none; font-size: 13px; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 1000; }
+        
+        svg { width: 100vw; height: 100vh; }
+        .link { fill: none; stroke-opacity: 0.6; }
+        
+        .node circle.SAFE { fill: #4CAF50; }
+        .node circle.LOW { fill: #2196F3; }
+        .node circle.MEDIUM { fill: #FFEB3B; }
+        .node circle.HIGH { fill: #FF9800; }
+        .node circle.CRITICAL { fill: #F44336; }
+        
+        .color-box.SAFE { background-color: #4CAF50; }
+        .color-box.LOW { background-color: #2196F3; }
+        .color-box.MEDIUM { background-color: #FFEB3B; }
+        .color-box.HIGH { background-color: #FF9800; }
+        .color-box.CRITICAL { background-color: #F44336; }
+        
+        .blast-radius { stroke: #F44336 !important; stroke-width: 3px !important; stroke-opacity: 0.8 !important; }
+        
+        .node text { pointer-events: none; font-size: 10px; fill: #eee; text-anchor: middle; }
+    </style>
+</head>
+<body>
+    <div id="author-label" style="position: absolute; bottom: 10px; right: 10px; font-size: 14px; font-weight: bold; color: rgba(255,255,255,0.5);">Created by Soyeb</div>
+    <div id="legend">
+        <b>Risk Legend</b>
+        <div class="legend-item"><div class="color-box SAFE"></div>Safe / Unknown</div>
+        <div class="legend-item"><div class="color-box LOW"></div>Low Risk</div>
+        <div class="legend-item"><div class="color-box MEDIUM"></div>Medium Risk</div>
+        <div class="legend-item"><div class="color-box HIGH"></div>High Risk</div>
+        <div class="legend-item"><div class="color-box CRITICAL"></div>Critical Risk</div>
+        <br>
+        <div class="legend-item"><div class="color-box" style="background:#F44336; height:3px; align-self:center;"></div>Blast Radius Path</div>
+    </div>
+    
+    <div class="tooltip" id="tooltip"></div>
+    <svg></svg>
+
+    <script>
+        const rawData = {
+  "nodes" : [ {
+    "id" : "com.test:poi-test:1.0",
+    "name" : "poi-test",
+    "version" : "1.0",
+    "risk" : "SAFE",
+    "isDirect" : true,
+    "metadata" : { }
+  }, {
+    "id" : "org.apache.commons:commons-math3:3.6.1",
+    "name" : "commons-math3",
+    "version" : "3.6.1",
+    "risk" : "LOW",
+    "isDirect" : false,
+    "metadata" : {
+      "notes" : "Up to date",
+      "isEol" : false,
+      "vulnerabilitiesCount" : 0,
+      "riskScore" : 0
+    }
+  }, {
+    "id" : "org.apache.commons:commons-collections4:4.4",
+    "name" : "commons-collections4",
+    "version" : "4.4",
+    "risk" : "LOW",
+    "isDirect" : false,
+    "metadata" : {
+      "notes" : "Safe but outdated",
+      "isEol" : false,
+      "vulnerabilitiesCount" : 0,
+      "riskScore" : 0
+    }
+  }, {
+    "id" : "com.zaxxer:SparseBitSet:1.3",
+    "name" : "SparseBitSet",
+    "version" : "1.3",
+    "risk" : "LOW",
+    "isDirect" : false,
+    "metadata" : {
+      "notes" : "Up to date",
+      "isEol" : false,
+      "vulnerabilitiesCount" : 0,
+      "riskScore" : 0
+    }
+  }, {
+    "id" : "commons-io:commons-io:2.15.0",
+    "name" : "commons-io",
+    "version" : "2.15.0",
+    "risk" : "LOW",
+    "isDirect" : false,
+    "metadata" : {
+      "notes" : "Safe but outdated",
+      "isEol" : false,
+      "vulnerabilitiesCount" : 0,
+      "riskScore" : 0
+    }
+  }, {
+    "id" : "org.apache.logging.log4j:log4j-api:2.21.1",
+    "name" : "log4j-api",
+    "version" : "2.21.1",
+    "risk" : "LOW",
+    "isDirect" : false,
+    "metadata" : {
+      "notes" : "Safe but outdated",
+      "isEol" : false,
+      "vulnerabilitiesCount" : 0,
+      "riskScore" : 0
+    }
+  }, {
+    "id" : "commons-codec:commons-codec:1.16.0",
+    "name" : "commons-codec",
+    "version" : "1.16.0",
+    "risk" : "LOW",
+    "isDirect" : false,
+    "metadata" : {
+      "notes" : "Safe but outdated",
+      "isEol" : false,
+      "vulnerabilitiesCount" : 0,
+      "riskScore" : 0
+    }
+  }, {
+    "id" : "org.apache.poi:poi:5.2.5",
+    "name" : "poi",
+    "version" : "5.2.5",
+    "risk" : "CRITICAL",
+    "isDirect" : true,
+    "metadata" : {
+      "notes" : "Consider updating or reviewing vulnerabilities",
+      "isEol" : false,
+      "vulnerabilitiesCount" : 5,
+      "riskScore" : 100
+    }
+  } ],
+  "links" : [ {
+    "source" : "org.apache.poi:poi:5.2.5",
+    "target" : "org.apache.logging.log4j:log4j-api:2.21.1",
+    "type" : "transitive"
+  }, {
+    "source" : "org.apache.poi:poi:5.2.5",
+    "target" : "commons-codec:commons-codec:1.16.0",
+    "type" : "transitive"
+  }, {
+    "source" : "org.apache.poi:poi:5.2.5",
+    "target" : "org.apache.commons:commons-collections4:4.4",
+    "type" : "transitive"
+  }, {
+    "source" : "com.test:poi-test:1.0",
+    "target" : "org.apache.poi:poi:5.2.5",
+    "type" : "blast_radius"
+  }, {
+    "source" : "org.apache.poi:poi:5.2.5",
+    "target" : "commons-io:commons-io:2.15.0",
+    "type" : "transitive"
+  }, {
+    "source" : "org.apache.poi:poi:5.2.5",
+    "target" : "org.apache.commons:commons-math3:3.6.1",
+    "type" : "transitive"
+  }, {
+    "source" : "org.apache.poi:poi:5.2.5",
+    "target" : "com.zaxxer:SparseBitSet:1.3",
+    "type" : "transitive"
+  } ]
+};
+
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        const svg = d3.select("svg")
+            .call(d3.zoom().on("zoom", function(event) {
+                container.attr("transform", event.transform);
+            }))
+            .append("g");
+            
+        const container = svg.append("g");
+
+        // SVG Markers for arrows
+        svg.append("defs").selectAll("marker")
+            .data(["normal", "blast"])
+            .enter().append("marker")
+            .attr("id", d => d)
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refX", 15)
+            .attr("refY", 0)
+            .attr("markerWidth", 6)
+            .attr("markerHeight", 6)
+            .attr("orient", "auto")
+            .append("path")
+            .attr("d", "M0,-5L10,0L0,5")
+            .attr("fill", d => d === 'blast' ? '#F44336' : '#999');
+
+        const simulation = d3.forceSimulation(rawData.nodes)
+            .force("link", d3.forceLink(rawData.links).id(d => d.id).distance(80))
+            .force("charge", d3.forceManyBody().strength(-300))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("collide", d3.forceCollide().radius(20));
+
+        const link = container.append("g")
+            .selectAll("path")
+            .data(rawData.links)
+            .join("path")
+            .attr("class", d => `link ${d.type === 'blast_radius' ? 'blast-radius' : ''}`)
+            .attr("stroke", d => d.type === 'blast_radius' ? '#F44336' : '#999')
+            .attr("stroke-width", d => d.type === 'blast_radius' ? 3 : 1)
+            .attr("marker-end", d => d.type === 'blast_radius' ? 'url(#blast)' : 'url(#normal)');
+
+        const node = container.append("g")
+            .selectAll("g")
+            .data(rawData.nodes)
+            .join("g")
+            .attr("class", "node")
+            .call(drag(simulation));
+
+        node.append("circle")
+            .attr("r", d => d.isDirect ? 12 : 8)
+            .attr("class", d => d.risk)
+            .attr("stroke", "#fff")
+            .attr("stroke-width", 1.5)
+            .on("mouseover", showTooltip)
+            .on("mouseout", hideTooltip);
+
+        node.append("text")
+            .attr("dy", -15)
+            .text(d => d.name);
+
+        simulation.on("tick", () => {
+            link.attr("d", d => {
+                const dx = d.target.x - d.source.x,
+                      dy = d.target.y - d.source.y,
+                      dr = Math.sqrt(dx * dx + dy * dy);
+                
+                // Keep straight lines for dependency trees instead of arcs for clarity
+                return `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`;
+            });
+
+            node.attr("transform", d => `translate(${d.x},${d.y})`);
+        });
+
+        // Tooltip logic
+        const tooltip = d3.select("#tooltip");
+        function showTooltip(event, d) {
+            let metaHtml = "";
+            if (d.metadata) {
+                if (d.metadata.isEol) metaHtml += "<br><b>EOL:</b> Yes";
+                if (d.metadata.vulnerabilitiesCount > 0) metaHtml += `<br><b>CVEs:</b> ${d.metadata.vulnerabilitiesCount}`;
+                if (d.metadata.notes) metaHtml += `<br><b>Notes:</b> ${d.metadata.notes}`;
+            }
+            
+            tooltip.style("display", "block")
+                   .html(`<b>${d.id}</b><br>Risk: <span style="font-weight:bold" class="${d.risk}">${d.risk}</span>${metaHtml}`)
+                   .style("left", (event.pageX + 15) + "px")
+                   .style("top", (event.pageY - 10) + "px");
+                   
+            d3.select(this).attr("stroke", "#000").attr("stroke-width", 2);
+        }
+        
+        function hideTooltip() {
+            tooltip.style("display", "none");
+            d3.select(this).attr("stroke", "#fff").attr("stroke-width", 1.5);
+        }
+
+        // Drag functions
+        function drag(simulation) {
+            function dragstarted(event) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                event.subject.fx = event.subject.x;
+                event.subject.fy = event.subject.y;
+            }
+            function dragged(event) {
+                event.subject.fx = event.x;
+                event.subject.fy = event.y;
+            }
+            function dragended(event) {
+                if (!event.active) simulation.alphaTarget(0);
+                event.subject.fx = null;
+                event.subject.fy = null;
+            }
+            return d3.drag()
+                     .on("start", dragstarted)
+                     .on("drag", dragged)
+                     .on("end", dragended);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.test</groupId>
+    <artifactId>poi-test</artifactId>
+    <version>1.0</version>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>5.2.5</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.dependencyhealth</groupId>
+                <artifactId>dependency-health-maven-plugin</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>scan-dependencies</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <failOnCritical>true</failOnCritical>
+                    <failOnHighCount>5</failOnHighCount>
+                    <failOnEol>true</failOnEol>
+                    
+                    <!-- Add your NVD API Key here! -->
+                    <nvdApiKey>f4b180ae-0116-47cf-bb51-2b7721e685b3</nvdApiKey>
+                </configuration>
+            </plugin>
+        </plugins>
+
+    </build>
+</project>

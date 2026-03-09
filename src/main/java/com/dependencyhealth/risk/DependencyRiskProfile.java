@@ -13,6 +13,7 @@ public class DependencyRiskProfile {
     private String purl;
     private List<Vulnerability> vulnerabilities = new ArrayList<>();
     private LifecycleData lifecycleData;
+    private String absoluteLatestVersion;
     private int riskScore = 0;
 
     public DependencyRiskProfile(String purl) {
@@ -31,6 +32,10 @@ public class DependencyRiskProfile {
     public void setLifecycleData(LifecycleData data) {
         this.lifecycleData = data;
         calculateRiskScore();
+    }
+
+    public void setAbsoluteLatestVersion(String v) {
+        this.absoluteLatestVersion = v;
     }
 
     private void calculateRiskScore() {
@@ -59,6 +64,10 @@ public class DependencyRiskProfile {
 
     public LifecycleData getLifecycleData() {
         return lifecycleData;
+    }
+
+    public String getAbsoluteLatestVersion() {
+        return absoluteLatestVersion;
     }
 
     public int getRiskScore() {
@@ -90,10 +99,19 @@ public class DependencyRiskProfile {
         if (riskScore > 0) {
             return "Consider updating or reviewing vulnerabilities";
         }
-        if (lifecycleData != null && lifecycleData.getLatestVersion() != null 
+        
+        // Priority 1: Maven Central direct check (the most accurate)
+        if (absoluteLatestVersion != null && !absoluteLatestVersion.isEmpty()) {
+            if (!absoluteLatestVersion.equals(purl.substring(purl.lastIndexOf('@') + 1))) {
+                return "Safe but outdated";
+            }
+        } 
+        // Priority 2: Fallback to EOL Client heuristics
+        else if (lifecycleData != null && lifecycleData.getLatestVersion() != null 
                 && !lifecycleData.getVersion().equals(lifecycleData.getLatestVersion())) {
             return "Safe but outdated";
         }
+        
         return "Up to date";
     }
 }

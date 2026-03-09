@@ -51,8 +51,12 @@ public class ConsoleReporter {
                 currentVersion = profile.getPurl().substring(profile.getPurl().indexOf('@') + 1);
             }
 
-            String latestVersion = profile.getLifecycleData() != null && profile.getLifecycleData().getLatestVersion() != null ? 
-                    profile.getLifecycleData().getLatestVersion() : "Unknown";
+            String latestVersion = "Unknown";
+            if (profile.getAbsoluteLatestVersion() != null && !profile.getAbsoluteLatestVersion().isEmpty()) {
+                latestVersion = profile.getAbsoluteLatestVersion();
+            } else if (profile.getLifecycleData() != null && profile.getLifecycleData().getLatestVersion() != null) {
+                latestVersion = profile.getLifecycleData().getLatestVersion();
+            }
 
             log.info(String.format("%-40s | %-15s | %-15s | %-25s | %-15s | %s",
                     truncate(dependencyName, 40),

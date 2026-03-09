@@ -52,7 +52,9 @@ public class HtmlReportGenerator {
             html.append("<td>").append(currentVersion).append("</td>");
 
             String latestVersion = "Unknown";
-            if (profile.getLifecycleData() != null && profile.getLifecycleData().getLatestVersion() != null) {
+            if (profile.getAbsoluteLatestVersion() != null && !profile.getAbsoluteLatestVersion().isEmpty()) {
+                latestVersion = profile.getAbsoluteLatestVersion();
+            } else if (profile.getLifecycleData() != null && profile.getLifecycleData().getLatestVersion() != null) {
                 latestVersion = profile.getLifecycleData().getLatestVersion();
             }
             html.append("<td>").append(latestVersion).append("</td>");

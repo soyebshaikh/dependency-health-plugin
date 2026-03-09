@@ -5,6 +5,7 @@ This plugin analyzes your Maven project dependencies (direct and transitive) dur
 ## Features
 - **Vulnerability Scanning**: Queries Sonatype OSS Index.
 - **Lifecycle Detection**: Integrates with endoflife.date API to flag EOL technologies.
+- **Latest Version Resolution**: Queries Maven Central Search API to map dependencies to their true latest published version.
 - **SBOM Generation**: Automatically produces a CycloneDX JSON Software Bill of Materials.
 - **Risk & Policy Engine**: Assigns risk scores and fails the build flexibly based on constraints like critical severity flaws or EOL versions.
 - **Comprehensive Reporting**: Console summary, HTML detailed report, and JSON CI/CD integration report.
@@ -31,6 +32,8 @@ Add the plugin to your `pom.xml`:
                 <failOnCritical>true</failOnCritical>
                 <failOnHighCount>5</failOnHighCount>
                 <failOnEol>true</failOnEol>
+                <!-- Optional: Use NVD API Key to avoid strict rate limits (5/min to 50/min) -->
+                <nvdApiKey>your-nvd-api-key</nvdApiKey>
             </configuration>
         </plugin>
     </plugins>
@@ -42,6 +45,18 @@ Run the verify phase:
 ```bash
 mvn verify
 ```
+
+### Multi-Module Projects
+
+If you have a multi-module (parent/child) Maven project and you want a single unified report for all modules rather than individual reports, run the `aggregate` goal from the root directory:
+
+```bash
+mvn dependency-health:aggregate
+```
+
+### Interactive Decision Graph
+
+Both normal Scans and Aggregate Scans will automatically generate an interactive HTML dependency graph inside the target folder (`dependency-graph.html`) without you needing to pass any extra arguments!
 
 ## Output Artifacts
 

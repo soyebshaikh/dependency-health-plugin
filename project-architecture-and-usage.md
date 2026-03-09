@@ -19,9 +19,19 @@ The project follows a clean, modular architecture separating concerns into speci
 *   **Usage**: Checks packages (via PURL) against known vulnerabilities (CVEs).
 *   **Note**: The public, anonymous API is rate-limited. In production, it's recommended to configure authentication credentials (username and API token) to handle larger enterprise projects.
 
+### NVD API
+*   **Endpoint**: `https://services.nvd.nist.gov/rest/json/cves/2.0`
+*   **Usage**: Checks packages against the National Vulnerability Database (CVEs).
+*   **Note**: The public, anonymous API is strictly rate-limited (5 requests per rolling minute). In production, configure an authentication credential to unlock higher volume processing.
+    *   **Configuration**: Add `<nvdApiKey>` (your NVD API Key) to the `<configuration>` block of the plugin in your `pom.xml`.
+
 ### endoflife.date API
 *   **Endpoint**: `https://endoflife.date/api/{product}.json`
 *   **Usage**: Checks if a specific technology/framework version (e.g., Spring Boot, Java) is currently End-of-Life (EOL) or actively supported.
+
+### Maven Central API
+*   **Endpoint**: `POST https://search.maven.org/solrsearch/select`
+*   **Usage**: Maps exact artifact ID and group ID identifiers to discover the Absolute Latest secure patch version for the scanned dependencies.
 
 ## 3. How to Use & Deploy
 
@@ -55,7 +65,10 @@ Add the plugin to the `pom.xml` of the project you want to scan:
             </executions>
             <configuration>
                 <failOnCritical>true</failOnCritical>
-                <failOnEol>false</failOnEol>
+                <failOnHighCount>5</failOnHighCount>
+                <failOnEol>true</failOnEol>
+                <!-- Optional: Use NVD API Key to avoid strict rate limits (5/min to 50/min) -->
+                <nvdApiKey>your-nvd-api-key</nvdApiKey> 
             </configuration>
         </plugin>
     </plugins>
@@ -67,6 +80,15 @@ Run the scan:
 mvn verify
 ```
 *Reports will be generated in configured project's `target/` directory.*
+
+### Multi-Module (Parent/Child) Projects
+If you are running a multi-module enterprise project and want a massive, unified report bridging all submodules together rather than separate reports, run the `aggregate` goal at the root directory:
+
+```bash
+mvn dependency-health:aggregate
+```
+
+This runs exactly **once** across the reactor, collecting dependencies from all modules, producing a single JSON, HTML, and Dependency Graph at the parent's `target/` directory.
 
 ## 4. How to Push to GitHub
 

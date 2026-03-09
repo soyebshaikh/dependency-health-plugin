@@ -2,6 +2,7 @@ C:\Users\Soyeb\Desktop\vibe coding\src\main\java\com\dependencyhealth\visualizat
 C:\Users\Soyeb\Desktop\vibe coding\src\main\java\com\dependencyhealth\visualization\GraphModelBuilder.java
 C:\Users\Soyeb\Desktop\vibe coding\src\main\java\com\dependencyhealth\risk\DependencyRiskProfile.java
 C:\Users\Soyeb\Desktop\vibe coding\src\main\java\com\dependencyhealth\visualization\DependencyGraphModel.java
+C:\Users\Soyeb\Desktop\vibe coding\src\main\java\com\dependencyhealth\lifecycle\MavenSearchClient.java
 C:\Users\Soyeb\Desktop\vibe coding\src\main\java\com\dependencyhealth\visualization\GraphJsonExporter.java
 C:\Users\Soyeb\Desktop\vibe coding\src\main\java\com\dependencyhealth\sbom\SbomGenerator.java
 C:\Users\Soyeb\Desktop\vibe coding\src\main\java\com\dependencyhealth\vulnerability\Vulnerability.java
@@ -15,6 +16,7 @@ C:\Users\Soyeb\Desktop\vibe coding\src\main\java\com\dependencyhealth\vulnerabil
 C:\Users\Soyeb\Desktop\vibe coding\src\main\java\com\dependencyhealth\vulnerability\OssIndexClient.java
 C:\Users\Soyeb\Desktop\vibe coding\src\main\java\com\dependencyhealth\util\HttpClientUtil.java
 C:\Users\Soyeb\Desktop\vibe coding\src\main\java\com\dependencyhealth\lifecycle\LifecycleClient.java
+C:\Users\Soyeb\Desktop\vibe coding\src\main\java\com\dependencyhealth\mojo\DependencyHealthAggregateMojo.java
 C:\Users\Soyeb\Desktop\vibe coding\src\main\java\com\dependencyhealth\visualization\HtmlGraphRenderer.java
 C:\Users\Soyeb\Desktop\vibe coding\src\main\java\com\dependencyhealth\lifecycle\EolClient.java
 C:\Users\Soyeb\Desktop\vibe coding\target\generated-sources\plugin\com\dependencyhealth\dependency_health_maven_plugin\HelpMojo.java

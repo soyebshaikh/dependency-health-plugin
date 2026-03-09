@@ -21,10 +21,19 @@ public class HttpClientUtil {
             .build();
 
     public static String get(String url) throws IOException {
-        Request request = new Request.Builder()
+        return get(url, null);
+    }
+
+    public static String get(String url, String apiKey) throws IOException {
+        Request.Builder requestBuilder = new Request.Builder()
                 .url(url)
-                .header("Accept", "application/json")
-                .build();
+                .header("Accept", "application/json");
+
+        if (apiKey != null && !apiKey.isEmpty()) {
+            requestBuilder.header("apiKey", apiKey);
+        }
+
+        Request request = requestBuilder.build();
 
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {

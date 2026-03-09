@@ -11,6 +11,83 @@
   <goalPrefix>dependency-health</goalPrefix>
   <mojos>
     <mojo>
+      <goal>aggregate</goal>
+      <description>Enterprise-Grade Maven Dependency Intelligence Plugin - Aggregate Goal Runs once across all modules in a multi-module project to generate a singular, aggregated dependency health report.</description>
+      <requiresDependencyResolution>test</requiresDependencyResolution>
+      <requiresDirectInvocation>false</requiresDirectInvocation>
+      <requiresProject>true</requiresProject>
+      <requiresReports>false</requiresReports>
+      <aggregator>true</aggregator>
+      <requiresOnline>false</requiresOnline>
+      <inheritedByDefault>true</inheritedByDefault>
+      <phase>verify</phase>
+      <implementation>com.dependencyhealth.mojo.DependencyHealthAggregateMojo</implementation>
+      <language>java</language>
+      <instantiationStrategy>per-lookup</instantiationStrategy>
+      <executionStrategy>once-per-session</executionStrategy>
+      <threadSafe>true</threadSafe>
+      <parameters>
+        <parameter>
+          <name>enableGraphVisualization</name>
+          <type>boolean</type>
+          <required>false</required>
+          <editable>true</editable>
+          <description></description>
+        </parameter>
+        <parameter>
+          <name>failOnCritical</name>
+          <type>boolean</type>
+          <required>false</required>
+          <editable>true</editable>
+          <description></description>
+        </parameter>
+        <parameter>
+          <name>failOnEol</name>
+          <type>boolean</type>
+          <required>false</required>
+          <editable>true</editable>
+          <description></description>
+        </parameter>
+        <parameter>
+          <name>failOnHighCount</name>
+          <type>int</type>
+          <required>false</required>
+          <editable>true</editable>
+          <description></description>
+        </parameter>
+        <parameter>
+          <name>nvdApiKey</name>
+          <type>java.lang.String</type>
+          <required>false</required>
+          <editable>true</editable>
+          <description></description>
+        </parameter>
+        <parameter>
+          <name>outputDirectory</name>
+          <type>java.io.File</type>
+          <required>true</required>
+          <editable>true</editable>
+          <description></description>
+        </parameter>
+        <parameter>
+          <name>skipScan</name>
+          <type>boolean</type>
+          <required>false</required>
+          <editable>true</editable>
+          <description></description>
+        </parameter>
+      </parameters>
+      <configuration>
+        <enableGraphVisualization implementation="boolean" default-value="true">${enableGraphVisualization}</enableGraphVisualization>
+        <failOnCritical implementation="boolean" default-value="true">${failOnCritical}</failOnCritical>
+        <failOnEol implementation="boolean" default-value="true">${failOnEol}</failOnEol>
+        <failOnHighCount implementation="int" default-value="5">${failOnHighCount}</failOnHighCount>
+        <nvdApiKey implementation="java.lang.String">${nvdApiKey}</nvdApiKey>
+        <outputDirectory implementation="java.io.File" default-value="${project.build.directory}">${outputDirectory}</outputDirectory>
+        <skipScan implementation="boolean" default-value="false">${skipScan}</skipScan>
+      </configuration>
+    </mojo>
+    <mojo>
       <goal>help</goal>
       <description>Display help information on dependency-health-maven-plugin. 
 Call mvn dependency-health:help -Ddetail=true -Dgoal=&lt;goal-name&gt; to display parameter details.</description>
@@ -108,6 +185,13 @@ Call mvn dependency-health:help -Ddetail=true -Dgoal=&lt;goal-name&gt; to displa
           <description></description>
         </parameter>
         <parameter>
+          <name>nvdApiKey</name>
+          <type>java.lang.String</type>
+          <required>false</required>
+          <editable>true</editable>
+          <description></description>
+        </parameter>
+        <parameter>
           <name>outputDirectory</name>
           <type>java.io.File</type>
           <required>true</required>
@@ -123,10 +207,11 @@ Call mvn dependency-health:help -Ddetail=true -Dgoal=&lt;goal-name&gt; to displa
         </parameter>
       </parameters>
       <configuration>
-        <enableGraphVisualization implementation="boolean" default-value="false">${enableGraphVisualization}</enableGraphVisualization>
+        <enableGraphVisualization implementation="boolean" default-value="true">${enableGraphVisualization}</enableGraphVisualization>
         <failOnCritical implementation="boolean" default-value="true">${failOnCritical}</failOnCritical>
         <failOnEol implementation="boolean" default-value="true">${failOnEol}</failOnEol>
         <failOnHighCount implementation="int" default-value="5">${failOnHighCount}</failOnHighCount>
+        <nvdApiKey implementation="java.lang.String">${nvdApiKey}</nvdApiKey>
         <outputDirectory implementation="java.io.File" default-value="${project.build.directory}">${outputDirectory}</outputDirectory>
         <skipScan implementation="boolean" default-value="false">${skipScan}</skipScan>
       </configuration>

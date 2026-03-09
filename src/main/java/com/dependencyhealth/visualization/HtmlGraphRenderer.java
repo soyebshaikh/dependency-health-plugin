@@ -27,11 +27,17 @@ public class HtmlGraphRenderer {
 "        svg { width: 100vw; height: 100vh; }\n" +
 "        .link { fill: none; stroke-opacity: 0.6; }\n" +
 "        \n" +
-"        .SAFE { fill: #4CAF50; }\n" +
-"        .LOW { fill: #2196F3; }\n" +
-"        .MEDIUM { fill: #FFEB3B; }\n" +
-"        .HIGH { fill: #FF9800; }\n" +
-"        .CRITICAL { fill: #F44336; }\n" +
+"        .node circle.SAFE { fill: #4CAF50; }\n" +
+"        .node circle.LOW { fill: #2196F3; }\n" +
+"        .node circle.MEDIUM { fill: #FFEB3B; }\n" +
+"        .node circle.HIGH { fill: #FF9800; }\n" +
+"        .node circle.CRITICAL { fill: #F44336; }\n" +
+"        \n" +
+"        .color-box.SAFE { background-color: #4CAF50; }\n" +
+"        .color-box.LOW { background-color: #2196F3; }\n" +
+"        .color-box.MEDIUM { background-color: #FFEB3B; }\n" +
+"        .color-box.HIGH { background-color: #FF9800; }\n" +
+"        .color-box.CRITICAL { background-color: #F44336; }\n" +
 "        \n" +
 "        .blast-radius { stroke: #F44336 !important; stroke-width: 3px !important; stroke-opacity: 0.8 !important; }\n" +
 "        \n" +

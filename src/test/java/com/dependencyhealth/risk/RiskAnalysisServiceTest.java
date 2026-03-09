@@ -26,7 +26,7 @@ public class RiskAnalysisServiceTest {
         LifecycleData l1 = new LifecycleData("spring-boot", "1.5.0", true, "2019-08-01", "3.1.2");
         eolData.put("pkg:maven/org.springframework.boot/spring-boot@1.5.0", l1);
 
-        Map<String, DependencyRiskProfile> profiles = service.analyzeRisk(null, vulns, eolData);
+        Map<String, DependencyRiskProfile> profiles = service.analyzeRisk(null, vulns, eolData, null);
 
         assertEquals(2, profiles.size());
 

@@ -15,7 +15,8 @@ public class RiskAnalysisService {
     public Map<String, DependencyRiskProfile> analyzeRisk(
             java.util.Set<org.apache.maven.artifact.Artifact> dependencies,
             Map<String, List<Vulnerability>> vulnerabilityMap,
-            Map<String, LifecycleData> lifecycleMap) {
+            Map<String, LifecycleData> lifecycleMap,
+            Map<String, String> latestVersionsMap) {
 
         Map<String, DependencyRiskProfile> riskProfiles = new HashMap<>();
 
@@ -45,6 +46,15 @@ public class RiskAnalysisService {
                 String purl = entry.getKey();
                 DependencyRiskProfile profile = riskProfiles.computeIfAbsent(purl, DependencyRiskProfile::new);
                 profile.setLifecycleData(entry.getValue());
+            }
+        }
+
+        // Process Latest Versions from Maven Central
+        if (latestVersionsMap != null) {
+            for (Map.Entry<String, String> entry : latestVersionsMap.entrySet()) {
+                String purl = entry.getKey();
+                DependencyRiskProfile profile = riskProfiles.computeIfAbsent(purl, DependencyRiskProfile::new);
+                profile.setAbsoluteLatestVersion(entry.getValue());
             }
         }
 

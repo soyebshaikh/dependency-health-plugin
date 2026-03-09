@@ -30,6 +30,39 @@ public class GraphModelBuilder {
         return graph;
     }
 
+    public DependencyGraphModel buildAggregateGraph(
+            java.util.List<DependencyNode> rootNodes,
+            Map<String, DependencyRiskProfile> riskProfiles) {
+        
+        DependencyGraphModel graph = new DependencyGraphModel();
+        
+        String aggregateId = "aggregate:reactor:1.0";
+        graph.setRootNodeId(aggregateId);
+        
+        GraphNode aggregateNode = new GraphNode(aggregateId, "Aggregated Reactor", "1.0");
+        aggregateNode.setDirectDependency(true);
+        aggregateNode.setRiskLevel("SAFE");
+        graph.addNode(aggregateNode);
+        
+        for (DependencyNode rootNode : rootNodes) {
+            Artifact projectArtifact = rootNode.getArtifact();
+            String rootId = createId(projectArtifact);
+            
+            GraphNode rootGraphNode = graph.getNode(rootId);
+            if (rootGraphNode == null) {
+                rootGraphNode = new GraphNode(rootId, projectArtifact.getArtifactId(), projectArtifact.getVersion());
+                rootGraphNode.setDirectDependency(true);
+                rootGraphNode.setRiskLevel("SAFE");
+                graph.addNode(rootGraphNode);
+            }
+            
+            graph.addEdge(new GraphEdge(aggregateId, rootId, "direct"));
+            traverseAndBuild(rootNode, rootId, graph, riskProfiles, true);
+        }
+        
+        return graph;
+    }
+
     private void traverseAndBuild(DependencyNode parentNode, 
                                   String parentId, 
                                   DependencyGraphModel graph, 

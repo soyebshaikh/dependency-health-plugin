@@ -1,0 +1,17 @@
+[ {
+  "purl" : "pkg:maven/junit/junit@4.13.2",
+  "vulnerabilities" : [ ],
+  "lifecycleData" : null,
+  "riskScore" : 0,
+  "highCount" : 0,
+  "riskLevelName" : "ðŸŸ¢ Low",
+  "notes" : "Up to date"
+}, {
+  "purl" : "pkg:maven/org.hamcrest/hamcrest-core@1.3",
+  "vulnerabilities" : [ ],
+  "lifecycleData" : null,
+  "riskScore" : 0,
+  "highCount" : 0,
+  "riskLevelName" : "ðŸŸ¢ Low",
+  "notes" : "Up to date"
+} ]

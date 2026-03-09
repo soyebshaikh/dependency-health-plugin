@@ -6,8 +6,10 @@ com\dependencyhealth\report\JsonReportGenerator.class
 com\dependencyhealth\visualization\GraphNode.class
 com\dependencyhealth\util\HttpClientUtil.class
 com\dependencyhealth\lifecycle\EolClient.class
+com\dependencyhealth\mojo\DependencyHealthAggregateMojo.class
 com\dependencyhealth\risk\DependencyRiskProfile.class
 com\dependencyhealth\mojo\DependencyHealthScanMojo.class
+com\dependencyhealth\lifecycle\MavenSearchClient.class
 com\dependencyhealth\policy\PolicyEngine.class
 com\dependencyhealth\dependency_health_maven_plugin\HelpMojo.class
 com\dependencyhealth\vulnerability\VulnerabilityClient.class
