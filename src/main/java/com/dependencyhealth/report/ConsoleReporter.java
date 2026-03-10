@@ -31,14 +31,29 @@ public class ConsoleReporter {
             String eolDate = profile.getLifecycleData() != null && profile.getLifecycleData().getEolDate() != null ? 
                     profile.getLifecycleData().getEolDate() : "";
             
+            String latestVersion = "Unknown";
+            if (profile.getAbsoluteLatestVersion() != null && !profile.getAbsoluteLatestVersion().isEmpty()) {
+                latestVersion = profile.getAbsoluteLatestVersion();
+            } else if (profile.getLifecycleData() != null && profile.getLifecycleData().getLatestVersion() != null) {
+                latestVersion = profile.getLifecycleData().getLatestVersion();
+            }
+
             String lifecycleStatus;
             if (isEol) {
-                lifecycleStatus = "âŒ EOL" + (!eolDate.isEmpty() ? " (" + eolDate + ")" : "");
+                lifecycleStatus = "[X] EOL" + (!eolDate.isEmpty() ? " (" + eolDate + ")" : "");
                 totalEol++;
             } else if (profile.getLifecycleData() != null) {
-                lifecycleStatus = "âœ… Supported";
+                lifecycleStatus = "[V] Supported";
+            } else if (!latestVersion.equals("Unknown")) {
+                // Heuristic: If we know the latest version and we are on it, it's "Current"
+                String current = profile.getPurl().substring(profile.getPurl().indexOf('@') + 1);
+                if (current.equals(latestVersion)) {
+                    lifecycleStatus = "[V] Current";
+                } else {
+                    lifecycleStatus = "[?] Outdated";
+                }
             } else {
-                lifecycleStatus = "â“ Unknown";
+                lifecycleStatus = "[?] Unknown";
             }
             
             if (profile.hasCritical()) totalCritical++;
@@ -49,13 +64,6 @@ public class ConsoleReporter {
             if (profile.getPurl().contains("@")) {
                 dependencyName = profile.getPurl().substring(0, profile.getPurl().indexOf('@')).replace("pkg:maven/", "");
                 currentVersion = profile.getPurl().substring(profile.getPurl().indexOf('@') + 1);
-            }
-
-            String latestVersion = "Unknown";
-            if (profile.getAbsoluteLatestVersion() != null && !profile.getAbsoluteLatestVersion().isEmpty()) {
-                latestVersion = profile.getAbsoluteLatestVersion();
-            } else if (profile.getLifecycleData() != null && profile.getLifecycleData().getLatestVersion() != null) {
-                latestVersion = profile.getLifecycleData().getLatestVersion();
             }
 
             log.info(String.format("%-40s | %-15s | %-15s | %-25s | %-15s | %s",

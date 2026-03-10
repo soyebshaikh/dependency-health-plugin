@@ -16,8 +16,13 @@ import java.util.Set;
 public class EolClient implements LifecycleClient {
 
     private final ObjectMapper mapper = new ObjectMapper();
+    private final org.apache.maven.plugin.logging.Log log;
 
     private List<String> supportedProducts;
+
+    public EolClient(org.apache.maven.plugin.logging.Log log) {
+        this.log = log;
+    }
 
     private void initProducts() {
         if (supportedProducts == null) {
@@ -41,16 +46,27 @@ public class EolClient implements LifecycleClient {
         String artifactId = artifact.getArtifactId().toLowerCase();
         String groupId = artifact.getGroupId().toLowerCase();
 
-        // 1. Exact matches
+        // 1. Explicit high-value mappings
+        if (groupId.startsWith("org.apache.maven")) return "apache-maven";
+        if (groupId.equals("org.apache.tomcat") || groupId.startsWith("org.apache.tomcat.")) return "tomcat";
+        if (groupId.contains("springframework")) return "spring-framework";
+        if (groupId.startsWith("org.eclipse.jetty")) return "eclipse-jetty";
+        if (artifactId.equals("log4j-api") || artifactId.equals("log4j-core")) return "log4j";
+
+        // 2. Exact matches
         if (supportedProducts.contains(artifactId)) return artifactId;
         
         String groupLast = groupId.substring(groupId.lastIndexOf('.') + 1);
         if (supportedProducts.contains(groupLast)) return groupLast;
 
-        // 2. Common heuristic: springframework -> spring-framework
-        if (groupId.contains("springframework")) return "spring-framework";
+        // 3. ArtifactId as suffix of product (e.g. maven-core matches apache-maven)
+        for (String product : supportedProducts) {
+            if (product.contains("-") && (artifactId.equals(product.substring(product.lastIndexOf('-') + 1)))) {
+                return product;
+            }
+        }
 
-        // 3. ArtifactId prefixes (e.g. log4j-core -> log4j)
+        // 4. ArtifactId prefixes (e.g. log4j-core -> log4j)
         for (String product : supportedProducts) {
             if (artifactId.startsWith(product + "-")) {
                 return product;
@@ -62,23 +78,41 @@ public class EolClient implements LifecycleClient {
 
     @Override
     public Map<String, LifecycleData> checkLifecycle(Set<Artifact> dependencies) {
-        Map<String, LifecycleData> results = new HashMap<>();
+        Map<String, LifecycleData> results = new java.util.concurrent.ConcurrentHashMap<>();
+        java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(5);
+        java.util.List<java.util.concurrent.Future<?>> futures = new java.util.ArrayList<>();
+
+        int total = dependencies.size();
+        java.util.concurrent.atomic.AtomicInteger count = new java.util.concurrent.atomic.AtomicInteger(0);
 
         for (Artifact artifact : dependencies) {
-            String mappedProduct = findProductMatch(artifact);
-
-            if (mappedProduct != null) {
+            futures.add(executor.submit(() -> {
+                String mappedProduct = findProductMatch(artifact);
                 try {
-                    LifecycleData data = checkProductCycle(artifact, mappedProduct);
-                    if (data != null) {
-                        String purl = String.format("pkg:maven/%s/%s@%s", artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion());
-                        results.put(purl, data);
+                    if (mappedProduct != null) {
+                        LifecycleData data = checkProductCycle(artifact, mappedProduct);
+                        if (data != null) {
+                            String purl = String.format("pkg:maven/%s/%s@%s", artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion());
+                            results.put(purl, data);
+                        }
                     }
                 } catch (Exception e) {
-                    System.err.println("Failed to fetch EOL data for " + mappedProduct + ": " + e.getMessage());
+                    // Fail silently for individual artifacts
+                } finally {
+                    int c = count.incrementAndGet();
+                    if (log != null && (c % 5 == 0 || c == total)) {
+                        log.info(" - Progress: " + c + "/" + total + " lifecycle products checked...");
+                    }
                 }
-            }
+            }));
         }
+
+        for (java.util.concurrent.Future<?> future : futures) {
+            try {
+                future.get(60, java.util.concurrent.TimeUnit.SECONDS);
+            } catch (Exception ignored) {}
+        }
+        executor.shutdown();
 
         return results;
     }

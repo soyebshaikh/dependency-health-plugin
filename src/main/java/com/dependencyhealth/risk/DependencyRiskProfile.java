@@ -83,10 +83,10 @@ public class DependencyRiskProfile {
     }
 
     public String getRiskLevelName() {
-        if (riskScore >= 100) return "ðŸ”´ Critical";
-        if (riskScore >= 50) return "ðŸ”´ High";
-        if (riskScore >= 20) return "ðŸŸ  Medium";
-        return "ðŸŸ¢ Low";
+        if (riskScore >= 100) return "! CRITICAL";
+        if (riskScore >= 50) return "* HIGH";
+        if (riskScore >= 20) return "- MEDIUM";
+        return ". LOW";
     }
 
     public String getNotes() {

@@ -28,6 +28,8 @@ import com.dependencyhealth.sbom.SbomGenerator;
 import com.dependencyhealth.vulnerability.NvdClient;
 import com.dependencyhealth.vulnerability.OssIndexClient;
 import com.dependencyhealth.vulnerability.Vulnerability;
+import com.dependencyhealth.nvd.NvdDatabaseManager;
+import com.dependencyhealth.nvd.NvdApiSynchronizer;
 import com.dependencyhealth.vulnerability.VulnerabilityClient;
 import com.dependencyhealth.visualization.BlastRadiusAnalyzer;
 import com.dependencyhealth.visualization.DependencyGraphModel;
@@ -75,6 +77,9 @@ public class DependencyHealthScanMojo extends AbstractMojo {
     @Parameter(property = "enableGraphVisualization", defaultValue = "true")
     private boolean enableGraphVisualization;
 
+    @Parameter(property = "skipPolicy", defaultValue = "true")
+    private boolean skipPolicy;
+
     @Parameter(property = "nvdApiKey")
     private String nvdApiKey;
 
@@ -114,8 +119,35 @@ public class DependencyHealthScanMojo extends AbstractMojo {
 
             // 3. Vulnerability Intelligence
             getLog().info("Step 3: Querying vulnerability intelligence APIs...");
+            
+            // --- Auto NVD Sync Logic ---
+            NvdDatabaseManager dbManager = new NvdDatabaseManager();
+            boolean needsSync = false;
+            if (!dbManager.exists()) {
+                getLog().info(" - NVD database not found. Triggering initial synchronization...");
+                needsSync = true;
+            } else {
+                long lastModified = dbManager.getLastModified();
+                long ageHours = (System.currentTimeMillis() - lastModified) / (1000 * 60 * 60);
+                if (ageHours > 24) {
+                    getLog().info(" - NVD database is " + ageHours + " hours old. Updating...");
+                    needsSync = true;
+                }
+            }
+
+            if (needsSync) {
+                try {
+                    NvdApiSynchronizer synchronizer = new NvdApiSynchronizer(dbManager, nvdApiKey);
+                    synchronizer.sync();
+                    getLog().info(" - NVD synchronization complete.");
+                } catch (Exception e) {
+                    getLog().warn(" - Automatic NVD sync failed: " + e.getMessage() + ". Proceeding with existing data.");
+                }
+            }
+            // ---------------------------
+
             getLog().info(" - API: Sonatype OSS Index (https://ossindex.sonatype.org/api/v3/component-report)");
-            getLog().info(" - API: NVD (https://services.nvd.nist.gov/rest/json/cves/2.0)");
+            getLog().info(" - NVD: Local Offline Cache (~/.m2/dependency-health/nvd-cache)");
             List<VulnerabilityClient> vulnClients = new ArrayList<>();
             vulnClients.add(new OssIndexClient());
             vulnClients.add(new NvdClient(nvdApiKey));
@@ -133,12 +165,12 @@ public class DependencyHealthScanMojo extends AbstractMojo {
             // 4. End-of-Life Detection
             getLog().info("Step 4: Querying lifecycle intelligence APIs...");
             getLog().info(" - API: endoflife.date (https://endoflife.date/api)");
-            LifecycleClient eolClient = new EolClient();
+            LifecycleClient eolClient = new EolClient(getLog());
             Map<String, LifecycleData> lifecycleDataMap = eolClient.checkLifecycle(dependencies);
             
             // 4.5 Latest Version Check
             getLog().info("Step 4.5: Resolving latest versions from Maven Central...");
-            MavenSearchClient searchClient = new MavenSearchClient();
+            MavenSearchClient searchClient = new MavenSearchClient(getLog());
             Map<String, String> latestVersionsMap = searchClient.getLatestVersions(dependencies);
 
             // 5. Risk Aggregation
@@ -188,9 +220,13 @@ public class DependencyHealthScanMojo extends AbstractMojo {
             }
 
             // 7. Policy Enforcement
-            getLog().info("Step 7: Enforcing policies...");
-            PolicyEngine policyEngine = new PolicyEngine(failOnCritical, failOnHighCount, failOnEol);
-            policyEngine.evaluate(riskProfiles);
+            if (!skipPolicy) {
+                getLog().info("Step 7: Enforcing policies...");
+                PolicyEngine policyEngine = new PolicyEngine(failOnCritical, failOnHighCount, failOnEol);
+                policyEngine.evaluate(riskProfiles);
+            } else {
+                getLog().info("Step 7: Policy enforcement skipped (skipPolicy=true).");
+            }
 
             long duration = System.currentTimeMillis() - startTime;
             getLog().info("------------------------------------------------------------------------");

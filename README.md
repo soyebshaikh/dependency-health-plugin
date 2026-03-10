@@ -2,13 +2,13 @@
 
 This plugin analyzes your Maven project dependencies (direct and transitive) during the build lifecycle to detect vulnerabilities, End-of-Life (EOL) components, and overall risk.
 
-## Features
-- **Vulnerability Scanning**: Queries Sonatype OSS Index.
-- **Lifecycle Detection**: Integrates with endoflife.date API to flag EOL technologies.
-- **Latest Version Resolution**: Queries Maven Central Search API to map dependencies to their true latest published version.
+- **Offline Vulnerability Scanning**: Local NVD database for lightning-fast, highly-reliable scans without NVD API rate limits.
+- **"Nuclear" Parallel Engine**: High-concurrency scanning of vulnerabilities, versions, and lifecycles (Step 4/4.5 is now up to 10x faster).
+- **Lifecycle Detection**: Integrates with endoflife.date API with smart version-based fallbacks (`[V] Current`, `[?] Outdated`).
+- **Latest Version Resolution**: Resilient parallel lookups against Maven Central.
 - **SBOM Generation**: Automatically produces a CycloneDX JSON Software Bill of Materials.
-- **Risk & Policy Engine**: Assigns risk scores and fails the build flexibly based on constraints like critical severity flaws or EOL versions.
-- **Comprehensive Reporting**: Console summary, HTML detailed report, and JSON CI/CD integration report.
+- **Risk & Policy Engine**: Assigns risk scores and fails the build flexibly. Use `-DskipPolicy=true` for diagnostic scans.
+- **Comprehensive Reporting**: Console summary (ASCII-safe), HTML detailed report, and JSON CI/CD integration report.
 
 ## Usage
 
@@ -40,19 +40,26 @@ Add the plugin to your `pom.xml`:
 </build>
 ```
 
-Run the verify phase:
-
+Run the scan:
 ```bash
-mvn verify
+mvn dependency-health:scan-dependencies
+```
+*The plugin will automatically sync vulnerability data if your local database is missing or more than 24 hours old. By default, the scan will NOT fail the build on vulnerabilities (policy enforcement is skipped for a smoother developer experience).*
+
+### Strict Policy Enforcement
+To make the build fail if vulnerabilities are found, set `skipPolicy` to `false`:
+```bash
+mvn dependency-health:scan-dependencies -DskipPolicy=false
 ```
 
 ### Multi-Module Projects
 
-If you have a multi-module (parent/child) Maven project and you want a single unified report for all modules rather than individual reports, run the `aggregate` goal from the root directory:
+For multi-module (parent/child) projects, use the `aggregate` goal to get a single unified report for the entire reactor:
 
 ```bash
 mvn dependency-health:aggregate
 ```
+*This also supports automatic synchronization and the default non-blocking policy.*
 
 ### Interactive Decision Graph
 

@@ -6,7 +6,8 @@ The project follows a clean, modular architecture separating concerns into speci
 *   **`mojo`**: Contains `DependencyHealthScanMojo`, the main entry point (the Maven Plugin goal). Orchestrates the entire scan process.
 *   **`dependency`**: Handles interaction with Maven APIs (`MavenProject`, `DependencyGraphBuilder`) to resolve direct and transitive dependencies.
 *   **`sbom`**: Generates a standard CycloneDX JSON Software Bill of Materials.
-*   **`vulnerability`**: Interfaces (`VulnerabilityClient`) and concrete implementations (`OssIndexClient`, `NvdClient` skeleton) for querying CVE databases.
+*   **`vulnerability`**: Interfaces (`VulnerabilityClient`) and concrete implementations (`OssIndexClient`, `NvdClient`). The `NvdClient` now performs lightning-fast lookups against a local SQLite database.
+*   **`nvd`**: The "Nuclear" Parallel Sync Engine. Handles high-speed synchronization of NIST data into a local SQLite cache with strict rate limiting and termination safety.
 *   **`lifecycle`**: Interfaces (`LifecycleClient`) and concrete implementations (`EolClient`) for checking End-of-Life status.
 *   **`risk`**: The `RiskAnalysisService` merges vulnerability and lifecycle data into a `DependencyRiskProfile`, calculating a unified risk score.
 *   **`policy`**: `PolicyEngine` enforces rules (like failing the build on critical vulnerabilities or EOL libraries).
@@ -19,19 +20,19 @@ The project follows a clean, modular architecture separating concerns into speci
 *   **Usage**: Checks packages (via PURL) against known vulnerabilities (CVEs).
 *   **Note**: The public, anonymous API is rate-limited. In production, it's recommended to configure authentication credentials (username and API token) to handle larger enterprise projects.
 
-### NVD API
-*   **Endpoint**: `https://services.nvd.nist.gov/rest/json/cves/2.0`
-*   **Usage**: Checks packages against the National Vulnerability Database (CVEs).
-*   **Note**: The public, anonymous API is strictly rate-limited (5 requests per rolling minute). In production, configure an authentication credential to unlock higher volume processing.
-    *   **Configuration**: Add `<nvdApiKey>` (your NVD API Key) to the `<configuration>` block of the plugin in your `pom.xml`.
+### NVD API (Offline)
+*   **Local Storage**: `~/.m2/dependency-health/nvd-cache/nvd.db`
+*   **Usage**: The plugin primarily uses this **Offline Database** for scanning. It ensures scans are fast (under 60s) and reliable. 
+*   **Syncing**: Use `mvn sync-nvd` to hydrate or update this database. The sync process uses a parallel fetch engine to saturate the NIST API limit (50 req/30s) while maintaining 100% crash-safety.
 
 ### endoflife.date API
 *   **Endpoint**: `https://endoflife.date/api/{product}.json`
 *   **Usage**: Checks if a specific technology/framework version (e.g., Spring Boot, Java) is currently End-of-Life (EOL) or actively supported.
 
 ### Maven Central API
-*   **Endpoint**: `POST https://search.maven.org/solrsearch/select`
-*   **Usage**: Maps exact artifact ID and group ID identifiers to discover the Absolute Latest secure patch version for the scanned dependencies.
+*   **Endpoint**: `https://search.maven.org/solrsearch/select`
+*   **Usage**: Maps identifiers to discover the Absolute Latest secure versions.
+*   **Resilience**: Queries are parallelized (5 threads) with a 3-attempt retry mechanism and automatic connection leak prevention.
 
 ## 3. How to Use & Deploy
 
@@ -67,6 +68,7 @@ Add the plugin to the `pom.xml` of the project you want to scan:
                 <failOnCritical>true</failOnCritical>
                 <failOnHighCount>5</failOnHighCount>
                 <failOnEol>true</failOnEol>
+                <skipPolicy>false</skipPolicy> <!-- Set to false to fail build on violations -->
                 <!-- Optional: Use NVD API Key to avoid strict rate limits (5/min to 50/min) -->
                 <nvdApiKey>your-nvd-api-key</nvdApiKey> 
             </configuration>
@@ -82,13 +84,16 @@ mvn verify
 *Reports will be generated in configured project's `target/` directory.*
 
 ### Multi-Module (Parent/Child) Projects
-If you are running a multi-module enterprise project and want a massive, unified report bridging all submodules together rather than separate reports, run the `aggregate` goal at the root directory:
+If you are running a multi-module enterprise project, run the `aggregate` goal at the root directory:
 
 ```bash
 mvn dependency-health:aggregate
 ```
 
-This runs exactly **once** across the reactor, collecting dependencies from all modules, producing a single JSON, HTML, and Dependency Graph at the parent's `target/` directory.
+This runs exactly **once** across the reactor, collecting dependencies from all modules. It includes:
+- **Automatic NVD Sync**: Checks database health for the entire reactor.
+- **Unified Risk Profile**: Aggregates vulnerabilities across all submodules.
+- **Unified Reports**: Generates a single HTML, JSON, and Interactive Graph at the parent's `target/` directory.
 
 ## 4. How to Push to GitHub
 

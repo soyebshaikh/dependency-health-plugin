@@ -30,6 +30,8 @@ import com.dependencyhealth.vulnerability.NvdClient;
 import com.dependencyhealth.vulnerability.OssIndexClient;
 import com.dependencyhealth.vulnerability.Vulnerability;
 import com.dependencyhealth.vulnerability.VulnerabilityClient;
+import com.dependencyhealth.nvd.NvdDatabaseManager;
+import com.dependencyhealth.nvd.NvdApiSynchronizer;
 import com.dependencyhealth.visualization.BlastRadiusAnalyzer;
 import com.dependencyhealth.visualization.DependencyGraphModel;
 import com.dependencyhealth.visualization.GraphJsonExporter;
@@ -78,6 +80,9 @@ public class DependencyHealthAggregateMojo extends AbstractMojo {
 
     @Parameter(property = "enableGraphVisualization", defaultValue = "true")
     private boolean enableGraphVisualization;
+
+    @Parameter(property = "skipPolicy", defaultValue = "true")
+    private boolean skipPolicy;
 
     @Parameter(property = "nvdApiKey")
     private String nvdApiKey;
@@ -157,12 +162,12 @@ public class DependencyHealthAggregateMojo extends AbstractMojo {
             // 4. End-of-Life Detection
             getLog().info("Step 4: Querying lifecycle intelligence APIs...");
             getLog().info(" - API: endoflife.date (https://endoflife.date/api)");
-            LifecycleClient eolClient = new EolClient();
+            LifecycleClient eolClient = new EolClient(getLog());
             Map<String, LifecycleData> lifecycleDataMap = eolClient.checkLifecycle(allDependencies);
             
             // 4.5 Latest Version Check
             getLog().info("Step 4.5: Resolving latest versions from Maven Central...");
-            MavenSearchClient searchClient = new MavenSearchClient();
+            MavenSearchClient searchClient = new MavenSearchClient(getLog());
             Map<String, String> latestVersionsMap = searchClient.getLatestVersions(allDependencies);
 
             // 5. Risk Aggregation
@@ -213,9 +218,13 @@ public class DependencyHealthAggregateMojo extends AbstractMojo {
             }
 
             // 7. Policy Enforcement
-            getLog().info("Step 7: Enforcing policies...");
-            PolicyEngine policyEngine = new PolicyEngine(failOnCritical, failOnHighCount, failOnEol);
-            policyEngine.evaluate(riskProfiles);
+            if (!skipPolicy) {
+                getLog().info("Step 7: Enforcing policies...");
+                PolicyEngine policyEngine = new PolicyEngine(failOnCritical, failOnHighCount, failOnEol);
+                policyEngine.evaluate(riskProfiles);
+            } else {
+                getLog().info("Step 7: Policy enforcement skipped (skipPolicy=true).");
+            }
 
             long duration = System.currentTimeMillis() - startTime;
             getLog().info("------------------------------------------------------------------------");

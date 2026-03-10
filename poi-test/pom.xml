@@ -13,6 +13,11 @@
             <artifactId>poi</artifactId>
             <version>5.2.5</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-core</artifactId>
+            <version>4.1.1</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -33,8 +38,8 @@
                     <failOnHighCount>5</failOnHighCount>
                     <failOnEol>true</failOnEol>
                     
-                    <!-- Add your NVD API Key here! -->
-                    <nvdApiKey>f4b180ae-0116-47cf-bb51-2b7721e685b3</nvdApiKey>
+                    <!-- Replace with your actual NVD API Key if available -->
+                    <nvdApiKey>YOUR_API_KEY</nvdApiKey>
                 </configuration>
             </plugin>
         </plugins>
