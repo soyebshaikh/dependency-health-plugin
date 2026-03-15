@@ -74,7 +74,7 @@ Add the plugin to the `pom.xml` of the project you want to scan:
                 <skipPolicy>false</skipPolicy> <!-- Set to false to fail build on violations -->
                 <!-- Optional: Use NVD API Key to avoid strict rate limits (5/min to 50/min) -->
                 <!-- remove the below line if you don't have the API key -->
-                <nvdApiKey>your-nvd-api-key</nvdApiKey> 
+                <!-- <nvdApiKey>your-nvd-api-key</nvdApiKey>  -->
             </configuration>
         </plugin>
     </plugins>

@@ -31,7 +31,8 @@ Add the plugin to your `pom.xml`:
                 <failOnHighCount>5</failOnHighCount>
                 <failOnEol>true</failOnEol>
                 <!-- Optional: Use NVD API Key to avoid strict rate limits (5/min to 50/min) -->
-                <nvdApiKey>your-nvd-api-key</nvdApiKey>
+                 <!-- remove the below line if you don't have the API key -->
+                <!-- <nvdApiKey>your-nvd-api-key</nvdApiKey> -->
             </configuration>
         </plugin>
     </plugins>

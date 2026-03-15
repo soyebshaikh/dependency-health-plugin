@@ -135,7 +135,7 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>com.dependencyhealth</groupId>
+                <groupId>io.github.soyebshaikh</groupId>
                 <artifactId>dependency-health-maven-plugin</artifactId>
                 <version>1.0.0-SNAPSHOT</version>
                 <executions>
