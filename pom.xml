@@ -8,7 +8,7 @@
     <artifactId>dependency-health-maven-plugin</artifactId>
     <version>1.0.0</version>
     <packaging>maven-plugin</packaging>
-    <goalPrefix>dependency-health</goalPrefix>
+    
 
     <name>Dependency Health Maven Plugin</name>
     <description>The Dependency Health Maven Plugin is an enterprise-grade intelligence tool designed to monitor and
@@ -181,7 +181,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>2.2.1</version>
+                <version>3.3.0</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -194,7 +194,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
+                <version>3.6.3</version>
+                <configuration>
+                    <javadocExecutable>C:\Program Files\Java\jdk-17\bin\javadoc.exe</javadocExecutable>
+                </configuration>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -233,16 +236,15 @@
                 <configuration>
                     <serverId>ossrh</serverId>
                     <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <!-- Set this to true and the release will automatically proceed and sync to Central Repository will follow  -->
-                    <autoReleaseAfterClose>false</autoReleaseAfterClose>
-                </configuration>
-            </plugin>
-      
-            <plugin>
+                    <!-- Set this to true and the release will automatically proceed and sync to Central Reposi<plugin>
                 <groupId>org.sonatype.central</groupId>
                 <artifactId>central-publishing-maven-plugin</artifactId>
                 <version>0.9.0</version>
                 <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                </configuration>
+            </plugin></extensions>
                 <configuration>
                     <publishingServerId>central</publishingServerId>
                 </configuration>
