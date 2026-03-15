@@ -30,8 +30,6 @@ import com.dependencyhealth.vulnerability.NvdClient;
 import com.dependencyhealth.vulnerability.OssIndexClient;
 import com.dependencyhealth.vulnerability.Vulnerability;
 import com.dependencyhealth.vulnerability.VulnerabilityClient;
-import com.dependencyhealth.nvd.NvdDatabaseManager;
-import com.dependencyhealth.nvd.NvdApiSynchronizer;
 import com.dependencyhealth.visualization.BlastRadiusAnalyzer;
 import com.dependencyhealth.visualization.DependencyGraphModel;
 import com.dependencyhealth.visualization.GraphJsonExporter;

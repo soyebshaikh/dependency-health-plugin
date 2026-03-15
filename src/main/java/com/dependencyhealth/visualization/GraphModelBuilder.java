@@ -80,6 +80,10 @@ public class GraphModelBuilder {
                 childGraphNode = new GraphNode(childId, childArtifact.getArtifactId(), childArtifact.getVersion());
                 childGraphNode.setDirectDependency(parentIsRoot); // If parent is root, this is a direct dependency
                 
+                // Add coordinates for duplicate detection
+                childGraphNode.addMetadata("groupId", childArtifact.getGroupId());
+                childGraphNode.addMetadata("artifactId", childArtifact.getArtifactId());
+                
                 // Assign Risk
                 DependencyRiskProfile profile = riskProfiles.get(childPurl);
                 if (profile != null) {

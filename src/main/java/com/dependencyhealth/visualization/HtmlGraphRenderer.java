@@ -19,7 +19,7 @@ public class HtmlGraphRenderer {
 "    <script src=\"https://d3js.org/d3.v7.min.js\"></script>\n" +
 "    <style>\n" +
 "        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #ffffff; margin: 0; padding: 0; overflow: hidden; }\n" +
-"        #legend { position: absolute; top: 10px; left: 10px; background: rgba(30,30,30,0.8); padding: 15px; border-radius: 8px; border: 1px solid #333; }\n" +
+"        #legend { position: absolute; top: 10px; left: 10px; background: rgba(30,30,30,0.8); padding: 15px; border-radius: 8px; border: 1px solid #333; z-index: 10; }\n" +
 "        .legend-item { display: flex; align-items: center; margin-bottom: 5px; font-size: 14px; }\n" +
 "        .color-box { width: 16px; height: 16px; margin-right: 10px; border-radius: 3px; }\n" +
 "        .tooltip { position: absolute; background: #fff; color: #000; padding: 10px; border-radius: 4px; pointer-events: none; font-size: 13px; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 1000; }\n" +
@@ -28,12 +28,14 @@ public class HtmlGraphRenderer {
 "        .link { fill: none; stroke-opacity: 0.6; }\n" +
 "        \n" +
 "        .node circle.SAFE { fill: #4CAF50; }\n" +
+"        .node circle.DUPLICATE { fill: #8b5cf6; }\n" +
 "        .node circle.LOW { fill: #2196F3; }\n" +
 "        .node circle.MEDIUM { fill: #FFEB3B; }\n" +
 "        .node circle.HIGH { fill: #FF9800; }\n" +
 "        .node circle.CRITICAL { fill: #F44336; }\n" +
 "        \n" +
 "        .color-box.SAFE { background-color: #4CAF50; }\n" +
+"        .color-box.DUPLICATE { background-color: #8b5cf6; }\n" +
 "        .color-box.LOW { background-color: #2196F3; }\n" +
 "        .color-box.MEDIUM { background-color: #FFEB3B; }\n" +
 "        .color-box.HIGH { background-color: #FF9800; }\n" +
@@ -42,13 +44,34 @@ public class HtmlGraphRenderer {
 "        .blast-radius { stroke: #F44336 !important; stroke-width: 3px !important; stroke-opacity: 0.8 !important; }\n" +
 "        \n" +
 "        .node text { pointer-events: none; font-size: 10px; fill: #eee; text-anchor: middle; }\n" +
+"        \n" +
+"        /* Duplicate Highlighting */\n" +
+"        .highlight-duplicate { stroke: #a78bfa !important; stroke-width: 4px !important; stroke-dasharray: 4; animation: pulse-violet 2s infinite; }\n" +
+"        @keyframes pulse-violet { 0% { fill: #8b5cf6; } 50% { fill: #a78bfa; } 100% { fill: #8b5cf6; } }\n" +
+"        \n" +
+"        #tools-panel { position: absolute; top: 10px; right: 10px; background: rgba(30,30,30,0.8); padding: 15px; border-radius: 8px; border: 1px solid #333; width: 250px; z-index: 10; }\n" +
+"        .btn { background: #8b5cf6; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; width: 100%; transition: background 0.2s; font-weight: 600; }\n" +
+"        .btn:hover { background: #7c3aed; }\n" +
+"        #duplicates-list { margin-top: 15px; max-height: 400px; overflow-y: auto; display: none; }\n" +
+"        .dup-item { padding: 10px; border-bottom: 1px solid #444; font-size: 13px; cursor: pointer; transition: background 0.2s; }\n" +
+"        .dup-item:hover { background: rgba(139, 92, 246, 0.2); }\n" +
+"        .dup-name { font-weight: bold; color: #a78bfa; margin-bottom: 4px; }\n" +
+"        .dimmed { opacity: 0.15 !important; }\n" +
 "    </style>\n" +
 "</head>\n" +
 "<body>\n" +
 "    <div id=\"author-label\" style=\"position: absolute; bottom: 10px; right: 10px; font-size: 14px; font-weight: bold; color: rgba(255,255,255,0.5);\">Created by Soyeb</div>\n" +
+"    \n" +
+"    <div id=\"tools-panel\">\n" +
+"        <b style=\"display: block; margin-bottom: 10px;\">Graph Tools</b>\n" +
+"        <button class=\"btn\" onclick=\"findDuplicates()\">Find Duplicate Versions</button>\n" +
+"        <div id=\"duplicates-list\"></div>\n" +
+"    </div>\n" +
+"\n" +
 "    <div id=\"legend\">\n" +
 "        <b>Risk Legend</b>\n" +
 "        <div class=\"legend-item\"><div class=\"color-box SAFE\"></div>Safe / Unknown</div>\n" +
+"        <div class=\"legend-item\"><div class=\"color-box DUPLICATE\"></div>Duplicate</div>\n" +
 "        <div class=\"legend-item\"><div class=\"color-box LOW\"></div>Low Risk</div>\n" +
 "        <div class=\"legend-item\"><div class=\"color-box MEDIUM\"></div>Medium Risk</div>\n" +
 "        <div class=\"legend-item\"><div class=\"color-box HIGH\"></div>High Risk</div>\n" +
@@ -65,6 +88,7 @@ public class HtmlGraphRenderer {
 "\n" +
 "        const width = window.innerWidth;\n" +
 "        const height = window.innerHeight;\n" +
+"        let isHighlighting = false;\n" +
 "\n" +
 "        const svg = d3.select(\"svg\")\n" +
 "            .call(d3.zoom().on(\"zoom\", function(event) {\n" +
@@ -125,11 +149,6 @@ public class HtmlGraphRenderer {
 "\n" +
 "        simulation.on(\"tick\", () => {\n" +
 "            link.attr(\"d\", d => {\n" +
-"                const dx = d.target.x - d.source.x,\n" +
-"                      dy = d.target.y - d.source.y,\n" +
-"                      dr = Math.sqrt(dx * dx + dy * dy);\n" +
-"                \n" +
-"                // Keep straight lines for dependency trees instead of arcs for clarity\n" +
 "                return `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`;\n" +
 "            });\n" +
 "\n" +
@@ -157,6 +176,62 @@ public class HtmlGraphRenderer {
 "        function hideTooltip() {\n" +
 "            tooltip.style(\"display\", \"none\");\n" +
 "            d3.select(this).attr(\"stroke\", \"#fff\").attr(\"stroke-width\", 1.5);\n" +
+"        }\n" +
+"\n" +
+"        // Duplicate Detection Logic\n" +
+"        function findDuplicates() {\n" +
+"            const groups = {};\n" +
+"            rawData.nodes.forEach(n => {\n" +
+"                if (n.metadata && n.metadata.groupId) {\n" +
+"                    const key = `${n.metadata.groupId}:${n.metadata.artifactId}`;\n" +
+"                    if (!groups[key]) groups[key] = [];\n" +
+"                    groups[key].push(n);\n" +
+"                }\n" +
+"            });\n" +
+"\n" +
+"            const duplicateGroups = Object.keys(groups).filter(key => groups[key].length > 1);\n" +
+"            const duplicateNodeIds = new Set();\n" +
+"            duplicateGroups.forEach(key => groups[key].forEach(n => duplicateNodeIds.add(n.id)));\n" +
+"            \n" +
+"            const listEl = document.getElementById('duplicates-list');\n" +
+"            listEl.innerHTML = '';\n" +
+"            \n" +
+"            if (duplicateGroups.length === 0) {\n" +
+"                listEl.style.display = 'block';\n" +
+"                listEl.innerHTML = '<div style=\"color:#999;font-size:12px;margin-top:10px\">No duplicate versions found.</div>';\n" +
+"                return;\n" +
+"            }\n" +
+"            \n" +
+"            listEl.style.display = 'block';\n" +
+"            listEl.innerHTML = '<div style=\"font-size:12px;margin-bottom:10px;color:#999\">Conflicts Found:</div>';\n" +
+"            \n" +
+"            duplicateGroups.forEach(key => {\n" +
+"                const item = document.createElement('div');\n" +
+"                item.className = 'dup-item';\n" +
+"                const versions = groups[key].map(n => n.version).join(', ');\n" +
+"                item.innerHTML = `<div class=\"dup-name\">${key.split(':')[1]}</div><div style=\"font-size:11px;color:#999\">Versions: ${versions}</div>`;\n" +
+"                item.onclick = () => focusOnNode(groups[key][0].id);\n" +
+"                listEl.appendChild(item);\n" +
+"            });\n" +
+"\n" +
+"            // Highlight in graph\n" +
+"            node.selectAll('circle')\n" +
+"                .classed('highlight-duplicate', d => duplicateNodeIds.has(d.id))\n" +
+"                .classed('dimmed', d => !duplicateNodeIds.has(d.id));\n" +
+"            \n" +
+"            link.classed('dimmed', true);\n" +
+"        }\n" +
+"\n" +
+"        function focusOnNode(nodeId) {\n" +
+"            const targetNode = rawData.nodes.find(n => n.id === nodeId);\n" +
+"            if (targetNode) {\n" +
+"                const transform = d3.zoomIdentity\n" +
+"                    .translate(width / 2, height / 2)\n" +
+"                    .scale(1.5)\n" +
+"                    .translate(-targetNode.x, -targetNode.y);\n" +
+"                \n" +
+"                svg.transition().duration(750).call(d3.zoom().transform, transform);\n" +
+"            }\n" +
 "        }\n" +
 "\n" +
 "        // Drag functions\n" +

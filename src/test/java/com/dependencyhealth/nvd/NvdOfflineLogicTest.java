@@ -1,7 +1,6 @@
 package com.dependencyhealth.nvd;
 
 import com.dependencyhealth.vulnerability.NvdClient;
-import com.dependencyhealth.vulnerability.Vulnerability;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.maven.artifact.Artifact;
@@ -11,7 +10,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;

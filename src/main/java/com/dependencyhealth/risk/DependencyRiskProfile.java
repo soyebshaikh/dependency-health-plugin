@@ -21,8 +21,15 @@ public class DependencyRiskProfile {
     }
 
     public void addVulnerability(Vulnerability v) {
-        // Deduplicate
-        boolean exists = vulnerabilities.stream().anyMatch(existing -> existing.getId().equals(v.getId()));
+        if (v == null || v.getId() == null)
+            return;
+
+        String newId = v.getId().trim().toUpperCase();
+
+        // Deduplicate by ID (CVE code)
+        boolean exists = vulnerabilities.stream()
+                .anyMatch(existing -> existing.getId().trim().toUpperCase().equals(newId));
+
         if (!exists) {
             vulnerabilities.add(v);
             calculateRiskScore();
@@ -42,11 +49,20 @@ public class DependencyRiskProfile {
         riskScore = 0;
         for (Vulnerability v : vulnerabilities) {
             switch (v.getSeverity().toUpperCase()) {
-                case "CRITICAL": riskScore += 100; break;
-                case "HIGH": riskScore += 50; break;
-                case "MEDIUM": riskScore += 20; break;
-                case "LOW": riskScore += 5; break;
-                default: riskScore += 1;
+                case "CRITICAL":
+                    riskScore += 100;
+                    break;
+                case "HIGH":
+                    riskScore += 50;
+                    break;
+                case "MEDIUM":
+                    riskScore += 20;
+                    break;
+                case "LOW":
+                    riskScore += 5;
+                    break;
+                default:
+                    riskScore += 1;
             }
         }
         if (lifecycleData != null && lifecycleData.isEol()) {
@@ -83,9 +99,12 @@ public class DependencyRiskProfile {
     }
 
     public String getRiskLevelName() {
-        if (riskScore >= 100) return "! CRITICAL";
-        if (riskScore >= 50) return "* HIGH";
-        if (riskScore >= 20) return "- MEDIUM";
+        if (riskScore >= 100)
+            return "! CRITICAL";
+        if (riskScore >= 50)
+            return "* HIGH";
+        if (riskScore >= 20)
+            return "MEDIUM";
         return ". LOW";
     }
 
@@ -99,19 +118,19 @@ public class DependencyRiskProfile {
         if (riskScore > 0) {
             return "Consider updating or reviewing vulnerabilities";
         }
-        
+
         // Priority 1: Maven Central direct check (the most accurate)
         if (absoluteLatestVersion != null && !absoluteLatestVersion.isEmpty()) {
             if (!absoluteLatestVersion.equals(purl.substring(purl.lastIndexOf('@') + 1))) {
                 return "Safe but outdated";
             }
-        } 
+        }
         // Priority 2: Fallback to EOL Client heuristics
-        else if (lifecycleData != null && lifecycleData.getLatestVersion() != null 
+        else if (lifecycleData != null && lifecycleData.getLatestVersion() != null
                 && !lifecycleData.getVersion().equals(lifecycleData.getLatestVersion())) {
             return "Safe but outdated";
         }
-        
+
         return "Up to date";
     }
 }

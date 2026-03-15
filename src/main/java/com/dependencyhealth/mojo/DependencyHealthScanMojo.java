@@ -119,7 +119,7 @@ public class DependencyHealthScanMojo extends AbstractMojo {
 
             // 3. Vulnerability Intelligence
             getLog().info("Step 3: Querying vulnerability intelligence APIs...");
-            
+
             // --- Auto NVD Sync Logic ---
             NvdDatabaseManager dbManager = new NvdDatabaseManager();
             boolean needsSync = false;
@@ -141,7 +141,8 @@ public class DependencyHealthScanMojo extends AbstractMojo {
                     synchronizer.sync();
                     getLog().info(" - NVD synchronization complete.");
                 } catch (Exception e) {
-                    getLog().warn(" - Automatic NVD sync failed: " + e.getMessage() + ". Proceeding with existing data.");
+                    getLog().warn(
+                            " - Automatic NVD sync failed: " + e.getMessage() + ". Proceeding with existing data.");
                 }
             }
             // ---------------------------
@@ -167,7 +168,7 @@ public class DependencyHealthScanMojo extends AbstractMojo {
             getLog().info(" - API: endoflife.date (https://endoflife.date/api)");
             LifecycleClient eolClient = new EolClient(getLog());
             Map<String, LifecycleData> lifecycleDataMap = eolClient.checkLifecycle(dependencies);
-            
+
             // 4.5 Latest Version Check
             getLog().info("Step 4.5: Resolving latest versions from Maven Central...");
             MavenSearchClient searchClient = new MavenSearchClient(getLog());

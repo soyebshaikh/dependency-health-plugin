@@ -12,6 +12,9 @@ The project follows a clean, modular architecture separating concerns into speci
 *   **`risk`**: The `RiskAnalysisService` merges vulnerability and lifecycle data into a `DependencyRiskProfile`, calculating a unified risk score.
 *   **`policy`**: `PolicyEngine` enforces rules (like failing the build on critical vulnerabilities or EOL libraries).
 *   **`report`**: Generators for HTML (`HtmlReportGenerator`), JSON (`JsonReportGenerator`), and Console parsing.
+    *   **Interactive Dashboard**: The HTML report features real-time interaction through filtering cards (Total Scans, Critical, High, EOL). 
+    *   **Vulnerability Linking**: Directly links CVEs and OSS Index IDs to official vulnerability databases (NVD, Sonatype, etc.).
+*   **`visualization`**: Handles the D3.js interactive graph, including its built-in conflict detection logic and search panel.
 
 ## 2. APIs Used
 
@@ -70,6 +73,7 @@ Add the plugin to the `pom.xml` of the project you want to scan:
                 <failOnEol>true</failOnEol>
                 <skipPolicy>false</skipPolicy> <!-- Set to false to fail build on violations -->
                 <!-- Optional: Use NVD API Key to avoid strict rate limits (5/min to 50/min) -->
+                <!-- remove the below line if you don't have the API key -->
                 <nvdApiKey>your-nvd-api-key</nvdApiKey> 
             </configuration>
         </plugin>

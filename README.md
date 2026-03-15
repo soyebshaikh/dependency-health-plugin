@@ -3,12 +3,10 @@
 This plugin analyzes your Maven project dependencies (direct and transitive) during the build lifecycle to detect vulnerabilities, End-of-Life (EOL) components, and overall risk.
 
 - **Offline Vulnerability Scanning**: Local NVD database for lightning-fast, highly-reliable scans without NVD API rate limits.
+- **Interactive Dashboard**: Modern HTML report with real-time filtering cards (Critical, High, EOL).
+- **Vulnerability Intelligence**: Clickable CVE/OSS Index IDs that link directly to external vulnerability databases.
+- **Decision Graph**: Interactive D3.js visualization with a built-in "Find Duplicate Versions" search tool and violet conflict highlighting.
 - **"Nuclear" Parallel Engine**: High-concurrency scanning of vulnerabilities, versions, and lifecycles (Step 4/4.5 is now up to 10x faster).
-- **Lifecycle Detection**: Integrates with endoflife.date API with smart version-based fallbacks (`[V] Current`, `[?] Outdated`).
-- **Latest Version Resolution**: Resilient parallel lookups against Maven Central.
-- **SBOM Generation**: Automatically produces a CycloneDX JSON Software Bill of Materials.
-- **Risk & Policy Engine**: Assigns risk scores and fails the build flexibly. Use `-DskipPolicy=true` for diagnostic scans.
-- **Comprehensive Reporting**: Console summary (ASCII-safe), HTML detailed report, and JSON CI/CD integration report.
 
 ## Usage
 
@@ -63,13 +61,32 @@ mvn dependency-health:aggregate
 
 ### Interactive Decision Graph
 
-Both normal Scans and Aggregate Scans will automatically generate an interactive HTML dependency graph inside the target folder (`dependency-graph.html`) without you needing to pass any extra arguments!
+Both normal Scans and Aggregate Scans will automatically generate an interactive HTML dependency graph inside the target folder (`dependency-graph.html`). 
+- **Duplicate Search**: Includes a "Find Duplicate Versions" tool to instantly identify and highlight version conflicts in violet.
+- **Zoom & Focus**: Click on conflicts in the tools panel to automatically zoom and center on the problematic dependency.
 
 ## Output Artifacts
 
 - `target/dependency-sbom.json`: CycloneDX SBOM.
 - `target/dependency-health-report.html`: Detailed HTML report.
 - `target/dependency-health-report.json`: JSON output for external systems.
+
+## Troubleshooting
+
+### Database Issues (Corrupted or Partial Sync)
+If the scan hangs, fails due to database errors, or the NVD data was interrupted during download, use this command to clear the local cache and restart:
+
+**Windows (PowerShell):**
+```powershell
+Remove-Item -Path "$HOME\.m2\dependency-health\nvd-cache" -Recurse -Force
+```
+
+**Linux / macOS / Git Bash:**
+```bash
+rm -rf ~/.m2/dependency-health/nvd-cache
+```
+
+Once cleared, run the scan again to trigger a fresh synchronization.
 
 ## License
 
