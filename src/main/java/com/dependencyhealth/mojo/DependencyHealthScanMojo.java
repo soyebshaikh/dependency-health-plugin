@@ -90,6 +90,18 @@ public class DependencyHealthScanMojo extends AbstractMojo {
             return;
         }
 
+        getLog().info(
+                "------------------------------------------------------------------------\n" +
+                        "DISCLAIMER: dependency-health-maven-plugin is an open source tool performing a best effort analysis of 3rd party dependencies; "
+                        +
+                        "false positives and false negatives may exist in the analysis performed by the tool. " +
+                        "Use of the tool and the reporting provided constitutes acceptance for use in an AS IS condition, "
+                        +
+                        "and there are NO warranties, implied or otherwise, with regard to the analysis or its use. " +
+                        "Any use of the tool and the reporting provided is at the user's risk. " +
+                        "In no event shall the copyright holder or dependency-health-maven-plugin be held liable for any damages whatsoever "
+                        +
+                        "arising out of or in connection with the use of this tool, the analysis performed, or the resulting report.");
         getLog().info("------------------------------------------------------------------------");
         getLog().info("Starting Dependency Health Scan...");
         getLog().info("------------------------------------------------------------------------");
