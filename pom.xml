@@ -6,8 +6,9 @@
 
     <groupId>io.github.soyebshaikh</groupId>
     <artifactId>dependency-health-maven-plugin</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>maven-plugin</packaging>
+    <goalPrefix>dependency-health</goalPrefix>
 
     <name>Dependency Health Maven Plugin</name>
     <description>The Dependency Health Maven Plugin is an enterprise-grade intelligence tool designed to monitor and
