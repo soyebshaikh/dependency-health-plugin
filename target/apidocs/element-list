@@ -1,0 +1,12 @@
+com.dependencyhealth.dependency
+com.dependencyhealth.lifecycle
+com.dependencyhealth.mojo
+com.dependencyhealth.nvd
+com.dependencyhealth.policy
+com.dependencyhealth.report
+com.dependencyhealth.risk
+com.dependencyhealth.sbom
+com.dependencyhealth.util
+com.dependencyhealth.visualization
+com.dependencyhealth.vulnerability
+io.github.soyebshaikh.dependency_health_maven_plugin

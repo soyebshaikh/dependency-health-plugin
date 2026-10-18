@@ -90,6 +90,16 @@ public class DependencyHealthScanMojo extends AbstractMojo {
             return;
         }
 
+        // Skip POM-packaged projects (parent/aggregator modules).
+        // When declared in a parent POM, Maven inherits this plugin to all children.
+        // Use the 'aggregate' goal instead for a single aggregated scan across all modules.
+        if ("pom".equals(project.getPackaging())) {
+            getLog().info("Skipping Dependency Health Scan for POM-packaged (aggregator) project: "
+                    + project.getArtifactId()
+                    + ". Use the 'aggregate' goal for a unified multi-module report.");
+            return;
+        }
+
         getLog().info(
                 "------------------------------------------------------------------------\n" +
                         "DISCLAIMER: dependency-health-maven-plugin is an open source tool performing a best effort analysis of 3rd party dependencies; "

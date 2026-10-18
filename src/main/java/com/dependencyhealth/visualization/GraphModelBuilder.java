@@ -23,6 +23,8 @@ public class GraphModelBuilder {
         GraphNode rootGraphNode = new GraphNode(rootId, projectArtifact.getArtifactId(), projectArtifact.getVersion());
         rootGraphNode.setDirectDependency(true);
         rootGraphNode.setRiskLevel("SAFE");
+        rootGraphNode.addMetadata("groupId", projectArtifact.getGroupId());
+        rootGraphNode.addMetadata("artifactId", projectArtifact.getArtifactId());
         graph.addNode(rootGraphNode);
 
         traverseAndBuild(rootNode, rootId, graph, riskProfiles, true);
@@ -53,6 +55,8 @@ public class GraphModelBuilder {
                 rootGraphNode = new GraphNode(rootId, projectArtifact.getArtifactId(), projectArtifact.getVersion());
                 rootGraphNode.setDirectDependency(true);
                 rootGraphNode.setRiskLevel("SAFE");
+                rootGraphNode.addMetadata("groupId", projectArtifact.getGroupId());
+                rootGraphNode.addMetadata("artifactId", projectArtifact.getArtifactId());
                 graph.addNode(rootGraphNode);
             }
             

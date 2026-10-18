@@ -10,257 +10,400 @@ public class HtmlGraphRenderer {
      * Generates a self-contained HTML file wrapping D3.js and the exported JSON graph.
      */
     public void renderHtml(String graphJson, File outputFile) throws IOException {
-        String htmlTemplate = "<!DOCTYPE html>\n" +
-"<html lang=\"en\">\n" +
-"<head>\n" +
-"    <meta charset=\"UTF-8\">\n" +
-"    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
-"    <title>Dependency Risk Graph</title>\n" +
-"    <script src=\"https://d3js.org/d3.v7.min.js\"></script>\n" +
-"    <style>\n" +
-"        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #ffffff; margin: 0; padding: 0; overflow: hidden; }\n" +
-"        #legend { position: absolute; top: 10px; left: 10px; background: rgba(30,30,30,0.8); padding: 15px; border-radius: 8px; border: 1px solid #333; z-index: 10; }\n" +
-"        .legend-item { display: flex; align-items: center; margin-bottom: 5px; font-size: 14px; }\n" +
-"        .color-box { width: 16px; height: 16px; margin-right: 10px; border-radius: 3px; }\n" +
-"        .tooltip { position: absolute; background: #fff; color: #000; padding: 10px; border-radius: 4px; pointer-events: none; font-size: 13px; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 1000; }\n" +
-"        \n" +
-"        svg { width: 100vw; height: 100vh; }\n" +
-"        .link { fill: none; stroke-opacity: 0.6; }\n" +
-"        \n" +
-"        .node circle.SAFE { fill: #4CAF50; }\n" +
-"        .node circle.DUPLICATE { fill: #8b5cf6; }\n" +
-"        .node circle.LOW { fill: #2196F3; }\n" +
-"        .node circle.MEDIUM { fill: #FFEB3B; }\n" +
-"        .node circle.HIGH { fill: #FF9800; }\n" +
-"        .node circle.CRITICAL { fill: #F44336; }\n" +
-"        \n" +
-"        .color-box.SAFE { background-color: #4CAF50; }\n" +
-"        .color-box.DUPLICATE { background-color: #8b5cf6; }\n" +
-"        .color-box.LOW { background-color: #2196F3; }\n" +
-"        .color-box.MEDIUM { background-color: #FFEB3B; }\n" +
-"        .color-box.HIGH { background-color: #FF9800; }\n" +
-"        .color-box.CRITICAL { background-color: #F44336; }\n" +
-"        \n" +
-"        .blast-radius { stroke: #F44336 !important; stroke-width: 3px !important; stroke-opacity: 0.8 !important; }\n" +
-"        \n" +
-"        .node text { pointer-events: none; font-size: 10px; fill: #eee; text-anchor: middle; }\n" +
-"        \n" +
-"        /* Duplicate Highlighting */\n" +
-"        .highlight-duplicate { stroke: #a78bfa !important; stroke-width: 4px !important; stroke-dasharray: 4; animation: pulse-violet 2s infinite; }\n" +
-"        @keyframes pulse-violet { 0% { fill: #8b5cf6; } 50% { fill: #a78bfa; } 100% { fill: #8b5cf6; } }\n" +
-"        \n" +
-"        #tools-panel { position: absolute; top: 10px; right: 10px; background: rgba(30,30,30,0.8); padding: 15px; border-radius: 8px; border: 1px solid #333; width: 250px; z-index: 10; }\n" +
-"        .btn { background: #8b5cf6; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; width: 100%; transition: background 0.2s; font-weight: 600; }\n" +
-"        .btn:hover { background: #7c3aed; }\n" +
-"        #duplicates-list { margin-top: 15px; max-height: 400px; overflow-y: auto; display: none; }\n" +
-"        .dup-item { padding: 10px; border-bottom: 1px solid #444; font-size: 13px; cursor: pointer; transition: background 0.2s; }\n" +
-"        .dup-item:hover { background: rgba(139, 92, 246, 0.2); }\n" +
-"        .dup-name { font-weight: bold; color: #a78bfa; margin-bottom: 4px; }\n" +
-"        .dimmed { opacity: 0.15 !important; }\n" +
-"    </style>\n" +
-"</head>\n" +
-"<body>\n" +
-"    <div id=\"author-label\" style=\"position: absolute; bottom: 10px; right: 10px; font-size: 14px; font-weight: bold; color: rgba(255,255,255,0.5);\">Created by Soyeb</div>\n" +
-"    \n" +
-"    <div id=\"tools-panel\">\n" +
-"        <b style=\"display: block; margin-bottom: 10px;\">Graph Tools</b>\n" +
-"        <button class=\"btn\" onclick=\"findDuplicates()\">Find Duplicate Versions</button>\n" +
-"        <div id=\"duplicates-list\"></div>\n" +
-"    </div>\n" +
-"\n" +
-"    <div id=\"legend\">\n" +
-"        <b>Risk Legend</b>\n" +
-"        <div class=\"legend-item\"><div class=\"color-box SAFE\"></div>Safe / Unknown</div>\n" +
-"        <div class=\"legend-item\"><div class=\"color-box DUPLICATE\"></div>Duplicate</div>\n" +
-"        <div class=\"legend-item\"><div class=\"color-box LOW\"></div>Low Risk</div>\n" +
-"        <div class=\"legend-item\"><div class=\"color-box MEDIUM\"></div>Medium Risk</div>\n" +
-"        <div class=\"legend-item\"><div class=\"color-box HIGH\"></div>High Risk</div>\n" +
-"        <div class=\"legend-item\"><div class=\"color-box CRITICAL\"></div>Critical Risk</div>\n" +
-"        <br>\n" +
-"        <div class=\"legend-item\"><div class=\"color-box\" style=\"background:#F44336; height:3px; align-self:center;\"></div>Blast Radius Path</div>\n" +
-"    </div>\n" +
-"    \n" +
-"    <div class=\"tooltip\" id=\"tooltip\"></div>\n" +
-"    <svg></svg>\n" +
-"\n" +
-"    <script>\n" +
-"        const rawData = {{GRAPH_JSON}};\n" +
-"\n" +
-"        const width = window.innerWidth;\n" +
-"        const height = window.innerHeight;\n" +
-"        let isHighlighting = false;\n" +
-"\n" +
-"        const svg = d3.select(\"svg\")\n" +
-"            .call(d3.zoom().on(\"zoom\", function(event) {\n" +
-"                container.attr(\"transform\", event.transform);\n" +
-"            }))\n" +
-"            .append(\"g\");\n" +
-"            \n" +
-"        const container = svg.append(\"g\");\n" +
-"\n" +
-"        // SVG Markers for arrows\n" +
-"        svg.append(\"defs\").selectAll(\"marker\")\n" +
-"            .data([\"normal\", \"blast\"])\n" +
-"            .enter().append(\"marker\")\n" +
-"            .attr(\"id\", d => d)\n" +
-"            .attr(\"viewBox\", \"0 -5 10 10\")\n" +
-"            .attr(\"refX\", 15)\n" +
-"            .attr(\"refY\", 0)\n" +
-"            .attr(\"markerWidth\", 6)\n" +
-"            .attr(\"markerHeight\", 6)\n" +
-"            .attr(\"orient\", \"auto\")\n" +
-"            .append(\"path\")\n" +
-"            .attr(\"d\", \"M0,-5L10,0L0,5\")\n" +
-"            .attr(\"fill\", d => d === 'blast' ? '#F44336' : '#999');\n" +
-"\n" +
-"        const simulation = d3.forceSimulation(rawData.nodes)\n" +
-"            .force(\"link\", d3.forceLink(rawData.links).id(d => d.id).distance(80))\n" +
-"            .force(\"charge\", d3.forceManyBody().strength(-300))\n" +
-"            .force(\"center\", d3.forceCenter(width / 2, height / 2))\n" +
-"            .force(\"collide\", d3.forceCollide().radius(20));\n" +
-"\n" +
-"        const link = container.append(\"g\")\n" +
-"            .selectAll(\"path\")\n" +
-"            .data(rawData.links)\n" +
-"            .join(\"path\")\n" +
-"            .attr(\"class\", d => `link ${d.type === 'blast_radius' ? 'blast-radius' : ''}`)\n" +
-"            .attr(\"stroke\", d => d.type === 'blast_radius' ? '#F44336' : '#999')\n" +
-"            .attr(\"stroke-width\", d => d.type === 'blast_radius' ? 3 : 1)\n" +
-"            .attr(\"marker-end\", d => d.type === 'blast_radius' ? 'url(#blast)' : 'url(#normal)');\n" +
-"\n" +
-"        const node = container.append(\"g\")\n" +
-"            .selectAll(\"g\")\n" +
-"            .data(rawData.nodes)\n" +
-"            .join(\"g\")\n" +
-"            .attr(\"class\", \"node\")\n" +
-"            .call(drag(simulation));\n" +
-"\n" +
-"        node.append(\"circle\")\n" +
-"            .attr(\"r\", d => d.isDirect ? 12 : 8)\n" +
-"            .attr(\"class\", d => d.risk)\n" +
-"            .attr(\"stroke\", \"#fff\")\n" +
-"            .attr(\"stroke-width\", 1.5)\n" +
-"            .on(\"mouseover\", showTooltip)\n" +
-"            .on(\"mouseout\", hideTooltip);\n" +
-"\n" +
-"        node.append(\"text\")\n" +
-"            .attr(\"dy\", -15)\n" +
-"            .text(d => d.name);\n" +
-"\n" +
-"        simulation.on(\"tick\", () => {\n" +
-"            link.attr(\"d\", d => {\n" +
-"                return `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`;\n" +
-"            });\n" +
-"\n" +
-"            node.attr(\"transform\", d => `translate(${d.x},${d.y})`);\n" +
-"        });\n" +
-"\n" +
-"        // Tooltip logic\n" +
-"        const tooltip = d3.select(\"#tooltip\");\n" +
-"        function showTooltip(event, d) {\n" +
-"            let metaHtml = \"\";\n" +
-"            if (d.metadata) {\n" +
-"                if (d.metadata.isEol) metaHtml += \"<br><b>EOL:</b> Yes\";\n" +
-"                if (d.metadata.vulnerabilitiesCount > 0) metaHtml += `<br><b>CVEs:</b> ${d.metadata.vulnerabilitiesCount}`;\n" +
-"                if (d.metadata.notes) metaHtml += `<br><b>Notes:</b> ${d.metadata.notes}`;\n" +
-"            }\n" +
-"            \n" +
-"            tooltip.style(\"display\", \"block\")\n" +
-"                   .html(`<b>${d.id}</b><br>Risk: <span style=\"font-weight:bold\" class=\"${d.risk}\">${d.risk}</span>${metaHtml}`)\n" +
-"                   .style(\"left\", (event.pageX + 15) + \"px\")\n" +
-"                   .style(\"top\", (event.pageY - 10) + \"px\");\n" +
-"                   \n" +
-"            d3.select(this).attr(\"stroke\", \"#000\").attr(\"stroke-width\", 2);\n" +
-"        }\n" +
-"        \n" +
-"        function hideTooltip() {\n" +
-"            tooltip.style(\"display\", \"none\");\n" +
-"            d3.select(this).attr(\"stroke\", \"#fff\").attr(\"stroke-width\", 1.5);\n" +
-"        }\n" +
-"\n" +
-"        // Duplicate Detection Logic\n" +
-"        function findDuplicates() {\n" +
-"            const groups = {};\n" +
-"            rawData.nodes.forEach(n => {\n" +
-"                if (n.metadata && n.metadata.groupId) {\n" +
-"                    const key = `${n.metadata.groupId}:${n.metadata.artifactId}`;\n" +
-"                    if (!groups[key]) groups[key] = [];\n" +
-"                    groups[key].push(n);\n" +
-"                }\n" +
-"            });\n" +
-"\n" +
-"            const duplicateGroups = Object.keys(groups).filter(key => groups[key].length > 1);\n" +
-"            const duplicateNodeIds = new Set();\n" +
-"            duplicateGroups.forEach(key => groups[key].forEach(n => duplicateNodeIds.add(n.id)));\n" +
-"            \n" +
-"            const listEl = document.getElementById('duplicates-list');\n" +
-"            listEl.innerHTML = '';\n" +
-"            \n" +
-"            if (duplicateGroups.length === 0) {\n" +
-"                listEl.style.display = 'block';\n" +
-"                listEl.innerHTML = '<div style=\"color:#999;font-size:12px;margin-top:10px\">No duplicate versions found.</div>';\n" +
-"                return;\n" +
-"            }\n" +
-"            \n" +
-"            listEl.style.display = 'block';\n" +
-"            listEl.innerHTML = '<div style=\"font-size:12px;margin-bottom:10px;color:#999\">Conflicts Found:</div>';\n" +
-"            \n" +
-"            duplicateGroups.forEach(key => {\n" +
-"                const item = document.createElement('div');\n" +
-"                item.className = 'dup-item';\n" +
-"                const versions = groups[key].map(n => n.version).join(', ');\n" +
-"                item.innerHTML = `<div class=\"dup-name\">${key.split(':')[1]}</div><div style=\"font-size:11px;color:#999\">Versions: ${versions}</div>`;\n" +
-"                item.onclick = () => focusOnNode(groups[key][0].id);\n" +
-"                listEl.appendChild(item);\n" +
-"            });\n" +
-"\n" +
-"            // Highlight in graph\n" +
-"            node.selectAll('circle')\n" +
-"                .classed('highlight-duplicate', d => duplicateNodeIds.has(d.id))\n" +
-"                .classed('dimmed', d => !duplicateNodeIds.has(d.id));\n" +
-"            \n" +
-"            link.classed('dimmed', true);\n" +
-"        }\n" +
-"\n" +
-"        function focusOnNode(nodeId) {\n" +
-"            const targetNode = rawData.nodes.find(n => n.id === nodeId);\n" +
-"            if (targetNode) {\n" +
-"                const transform = d3.zoomIdentity\n" +
-"                    .translate(width / 2, height / 2)\n" +
-"                    .scale(1.5)\n" +
-"                    .translate(-targetNode.x, -targetNode.y);\n" +
-"                \n" +
-"                svg.transition().duration(750).call(d3.zoom().transform, transform);\n" +
-"            }\n" +
-"        }\n" +
-"\n" +
-"        // Drag functions\n" +
-"        function drag(simulation) {\n" +
-"            function dragstarted(event) {\n" +
-"                if (!event.active) simulation.alphaTarget(0.3).restart();\n" +
-"                event.subject.fx = event.subject.x;\n" +
-"                event.subject.fy = event.subject.y;\n" +
-"            }\n" +
-"            function dragged(event) {\n" +
-"                event.subject.fx = event.x;\n" +
-"                event.subject.fy = event.y;\n" +
-"            }\n" +
-"            function dragended(event) {\n" +
-"                if (!event.active) simulation.alphaTarget(0);\n" +
-"                event.subject.fx = null;\n" +
-"                event.subject.fy = null;\n" +
-"            }\n" +
-"            return d3.drag()\n" +
-"                     .on(\"start\", dragstarted)\n" +
-"                     .on(\"drag\", dragged)\n" +
-"                     .on(\"end\", dragended);\n" +
-"        }\n" +
-"    </script>\n" +
-"</body>\n" +
-"</html>";
+        StringBuilder html = new StringBuilder();
 
-        String finalHtml = htmlTemplate.replace("{{GRAPH_JSON}}", graphJson);
+        html.append("<!DOCTYPE html>\n");
+        html.append("<html lang=\"en\">\n");
+        html.append("<head>\n");
+        html.append("  <meta charset=\"UTF-8\">\n");
+        html.append("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
+        html.append("  <title>Dependency Risk Graph</title>\n");
+        html.append("  <script src=\"https://d3js.org/d3.v7.min.js\"></script>\n");
+        html.append("  <style>\n");
+        html.append("    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #fff; margin: 0; padding: 0; overflow: hidden; }\n");
+        html.append("    svg { width: 100vw; height: 100vh; }\n");
 
+        // Links
+        html.append("    .link { fill: none; stroke-opacity: 0.6; }\n");
+        html.append("    .link-dimmed    { stroke-opacity: 0.05 !important; }\n");
+        html.append("    .link-connected { stroke-opacity: 0.75 !important; stroke-width: 2px !important; }\n");
+
+        // Nodes
+        html.append("    .node text { pointer-events: none; font-size: 10px; fill: #eee; text-anchor: middle; }\n");
+        html.append("    .node-dimmed { opacity: 0.1 !important; }\n");
+        html.append("    .node circle.SAFE     { fill: #4CAF50; }\n");
+        html.append("    .node circle.DUPLICATE{ fill: #8b5cf6; }\n");
+        html.append("    .node circle.LOW      { fill: #2196F3; }\n");
+        html.append("    .node circle.MEDIUM   { fill: #FFEB3B; }\n");
+        html.append("    .node circle.HIGH     { fill: #FF9800; }\n");
+        html.append("    .node circle.CRITICAL { fill: #F44336; }\n");
+
+        // Highlight modes
+        html.append("    .highlight-duplicate { stroke: #a78bfa !important; stroke-width: 4px !important; stroke-dasharray: 4; animation: pulse-violet 2s infinite; }\n");
+        html.append("    @keyframes pulse-violet { 0%{fill:#8b5cf6;} 50%{fill:#a78bfa;} 100%{fill:#8b5cf6;} }\n");
+        html.append("    .highlight-search { stroke: #facc15 !important; stroke-width: 3px !important; }\n");
+        html.append("    .blast-radius { stroke: #F44336 !important; stroke-width: 3px !important; stroke-opacity: 0.85 !important; }\n");
+
+        // Tooltip
+        html.append("    .tooltip { position: absolute; background: #fff; color: #000; padding: 10px; border-radius: 4px; pointer-events: none; font-size: 13px; display: none; box-shadow: 0 4px 8px rgba(0,0,0,0.4); z-index: 1000; max-width: 280px; }\n");
+
+        // Legend
+        html.append("    #legend { position: absolute; top: 10px; left: 10px; background: rgba(20,20,30,0.9); padding: 14px; border-radius: 8px; border: 1px solid #333; z-index: 10; }\n");
+        html.append("    .legend-item { display: flex; align-items: center; margin-bottom: 5px; font-size: 13px; }\n");
+        html.append("    .color-box { width: 14px; height: 14px; margin-right: 9px; border-radius: 3px; flex-shrink: 0; }\n");
+        html.append("    .color-box.SAFE      { background:#4CAF50; }\n");
+        html.append("    .color-box.DUPLICATE { background:#8b5cf6; }\n");
+        html.append("    .color-box.LOW       { background:#2196F3; }\n");
+        html.append("    .color-box.MEDIUM    { background:#FFEB3B; }\n");
+        html.append("    .color-box.HIGH      { background:#FF9800; }\n");
+        html.append("    .color-box.CRITICAL  { background:#F44336; }\n");
+
+        // Tools panel
+        html.append("    #tools-panel { position: absolute; top: 10px; right: 10px; background: rgba(20,20,30,0.92); padding: 15px; border-radius: 8px; border: 1px solid #3d3d5c; width: 275px; z-index: 10; }\n");
+        html.append("    .panel-title { font-weight: 700; font-size: 12px; letter-spacing: 0.06em; margin-bottom: 13px; color: #c4b5fd; text-transform: uppercase; }\n");
+
+        // Search
+        html.append("    .search-section { margin-bottom: 13px; }\n");
+        html.append("    .search-label { font-size: 11px; color: #888; margin-bottom: 6px; display: block; }\n");
+        html.append("    .search-row { display: flex; gap: 6px; }\n");
+        html.append("    #search-input { flex: 1; background: #1a1a2e; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 6px 8px; font-size: 12px; outline: none; transition: border 0.2s; }\n");
+        html.append("    #search-input:focus { border-color: #8b5cf6; }\n");
+        html.append("    #search-input::placeholder { color: #555; }\n");
+        html.append("    #search-results { margin-top: 8px; max-height: 145px; overflow-y: auto; display: none; }\n");
+        html.append("    .search-result-item { padding: 7px 8px; border-bottom: 1px solid #2a2a3e; font-size: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.15s; }\n");
+        html.append("    .search-result-item:hover { background: rgba(139,92,246,0.2); }\n");
+        html.append("    .search-result-name { color: #e2e8f0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }\n");
+        html.append("    .search-result-version { color: #a78bfa; font-size: 10px; background: rgba(139,92,246,0.18); padding: 2px 6px; border-radius: 3px; white-space: nowrap; }\n");
+
+        // Buttons
+        html.append("    .btn { background: #8b5cf6; color: #fff; border: none; padding: 7px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; transition: background 0.2s; white-space: nowrap; }\n");
+        html.append("    .btn:hover { background: #7c3aed; }\n");
+        html.append("    .btn-full { width: 100%; margin-bottom: 7px; display: block; }\n");
+        html.append("    .btn-reset { background: #2d3748; }\n");
+        html.append("    .btn-reset:hover { background: #4a5568; }\n");
+        html.append("    .divider { border: none; border-top: 1px solid #2a2a3e; margin: 12px 0; }\n");
+
+        // No-result helper
+        html.append("    .no-results { color: #555; font-size: 11px; text-align: center; padding: 6px 0; }\n");
+
+        // Duplicates list
+        html.append("    #duplicates-list { margin-top: 10px; max-height: 250px; overflow-y: auto; display: none; }\n");
+        html.append("    .dup-item { padding: 9px; border-bottom: 1px solid #2a2a3e; }\n");
+        html.append("    .dup-name { font-weight: bold; color: #a78bfa; font-size: 12px; margin-bottom: 5px; }\n");
+        html.append("    .dup-versions { display: flex; flex-wrap: wrap; gap: 4px; }\n");
+        html.append("    .dup-version-tag { font-size: 10px; color: #e2e8f0; background: #252540; padding: 2px 7px; border-radius: 3px; cursor: pointer; border: 1px solid #444; transition: all 0.2s; }\n");
+        html.append("    .dup-version-tag:hover { border-color: #8b5cf6; color: #a78bfa; }\n");
+
+        // Author
+        html.append("    #author-label { position: absolute; bottom: 10px; right: 10px; font-size: 13px; color: rgba(255,255,255,0.35); }\n");
+        html.append("  </style>\n");
+        html.append("</head>\n");
+        html.append("<body>\n");
+        html.append("  <div id=\"author-label\">Created by Soyeb</div>\n");
+
+        // Tools panel HTML
+        html.append("  <div id=\"tools-panel\">\n");
+        html.append("    <div class=\"panel-title\">Graph Tools</div>\n");
+        html.append("    <div class=\"search-section\">\n");
+        html.append("      <span class=\"search-label\">Search by name or version</span>\n");
+        html.append("      <div class=\"search-row\">\n");
+        html.append("        <input id=\"search-input\" type=\"text\" placeholder=\"e.g. jackson, 2.15.2 ...\" oninput=\"onSearchInput(this.value)\" />\n");
+        html.append("        <button class=\"btn\" onclick=\"pinSearch()\">Pin</button>\n");
+        html.append("      </div>\n");
+        html.append("      <div id=\"search-results\"></div>\n");
+        html.append("    </div>\n");
+        html.append("    <hr class=\"divider\">\n");
+        html.append("    <button class=\"btn btn-full\" onclick=\"findDuplicates()\">Find Duplicate Versions</button>\n");
+        html.append("    <button class=\"btn btn-full btn-reset\" onclick=\"resetGraph()\">Reset / Clear</button>\n");
+        html.append("    <div id=\"duplicates-list\"></div>\n");
+        html.append("  </div>\n");
+
+        // Legend
+        html.append("  <div id=\"legend\">\n");
+        html.append("    <b>Risk Legend</b>\n");
+        html.append("    <div class=\"legend-item\"><div class=\"color-box SAFE\"></div>Safe / Unknown</div>\n");
+        html.append("    <div class=\"legend-item\"><div class=\"color-box DUPLICATE\"></div>Duplicate</div>\n");
+        html.append("    <div class=\"legend-item\"><div class=\"color-box LOW\"></div>Low Risk</div>\n");
+        html.append("    <div class=\"legend-item\"><div class=\"color-box MEDIUM\"></div>Medium Risk</div>\n");
+        html.append("    <div class=\"legend-item\"><div class=\"color-box HIGH\"></div>High Risk</div>\n");
+        html.append("    <div class=\"legend-item\"><div class=\"color-box CRITICAL\"></div>Critical Risk</div>\n");
+        html.append("    <br>\n");
+        html.append("    <div class=\"legend-item\"><div class=\"color-box\" style=\"background:#F44336;height:3px;align-self:center;\"></div>Blast Radius Path</div>\n");
+        html.append("  </div>\n");
+
+        html.append("  <div class=\"tooltip\" id=\"tooltip\"></div>\n");
+        html.append("  <svg></svg>\n");
+
+        // JavaScript
+        html.append("  <script>\n");
+        html.append("    const rawData = ").append(graphJson).append(";\n");
+        html.append("""
+const width  = window.innerWidth;
+const height = window.innerHeight;
+
+// ── SVG / zoom setup ────────────────────────────────────────────────────────
+const svgRoot = d3.select('svg');
+const zoomBehavior = d3.zoom().on('zoom', (event) => container.attr('transform', event.transform));
+svgRoot.call(zoomBehavior);
+const svg       = svgRoot.append('g');
+const container = svg.append('g');
+
+// Arrow markers
+svg.append('defs').selectAll('marker')
+    .data(['normal', 'blast'])
+    .enter().append('marker')
+    .attr('id', d => d)
+    .attr('viewBox', '0 -5 10 10')
+    .attr('refX', 15).attr('refY', 0)
+    .attr('markerWidth', 6).attr('markerHeight', 6)
+    .attr('orient', 'auto')
+    .append('path')
+    .attr('d', 'M0,-5L10,0L0,5')
+    .attr('fill', d => d === 'blast' ? '#F44336' : '#999');
+
+// ── Force simulation ─────────────────────────────────────────────────────────
+const simulation = d3.forceSimulation(rawData.nodes)
+    .force('link',    d3.forceLink(rawData.links).id(d => d.id).distance(80))
+    .force('charge',  d3.forceManyBody().strength(-300))
+    .force('center',  d3.forceCenter(width / 2, height / 2))
+    .force('collide', d3.forceCollide().radius(20));
+
+// ── Links ────────────────────────────────────────────────────────────────────
+const link = container.append('g')
+    .selectAll('path')
+    .data(rawData.links)
+    .join('path')
+    .attr('class', d => 'link' + (d.type === 'blast_radius' ? ' blast-radius' : ''))
+    .attr('stroke',       d => d.type === 'blast_radius' ? '#F44336' : '#999')
+    .attr('stroke-width', d => d.type === 'blast_radius' ? 3 : 1)
+    .attr('marker-end',   d => d.type === 'blast_radius' ? 'url(#blast)' : 'url(#normal)');
+
+// ── Nodes ────────────────────────────────────────────────────────────────────
+const node = container.append('g')
+    .selectAll('g')
+    .data(rawData.nodes)
+    .join('g')
+    .attr('class', 'node')
+    .call(drag(simulation));
+
+node.append('circle')
+    .attr('r', d => d.isDirect ? 12 : 8)
+    .attr('class', d => d.risk)
+    .attr('stroke', '#fff')
+    .attr('stroke-width', 1.5)
+    .on('mouseover', showTooltip)
+    .on('mouseout',  hideTooltip);
+
+node.append('text')
+    .attr('dy', -15)
+    .text(d => d.name);
+
+simulation.on('tick', () => {
+    link.attr('d', d => `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`);
+    node.attr('transform', d => `translate(${d.x},${d.y})`);
+});
+
+// ── Tooltip ──────────────────────────────────────────────────────────────────
+const tooltip = d3.select('#tooltip');
+function showTooltip(event, d) {
+    let meta = '';
+    if (d.metadata) {
+        if (d.metadata.isEol) meta += '<br><b>EOL:</b> Yes';
+        if (d.metadata.vulnerabilitiesCount > 0) meta += `<br><b>CVEs:</b> ${d.metadata.vulnerabilitiesCount}`;
+        if (d.metadata.notes) meta += `<br><b>Notes:</b> ${d.metadata.notes}`;
+    }
+    const ver = d.version ? `<br><b>Version:</b> ${d.version}` : '';
+    tooltip.style('display', 'block')
+           .html(`<b>${d.id}</b>${ver}<br>Risk: <span style="font-weight:bold">${d.risk}</span>${meta}`)
+           .style('left', (event.pageX + 15) + 'px')
+           .style('top',  (event.pageY - 10) + 'px');
+    d3.select(this).attr('stroke', '#000').attr('stroke-width', 2);
+}
+function hideTooltip() {
+    tooltip.style('display', 'none');
+    d3.select(this).attr('stroke', '#fff').attr('stroke-width', 1.5);
+}
+
+// ── Reset ─────────────────────────────────────────────────────────────────────
+function resetGraph() {
+    node.classed('node-dimmed', false);
+    node.selectAll('circle')
+        .classed('highlight-duplicate', false)
+        .classed('highlight-search',    false);
+    link.classed('link-dimmed',    false)
+        .classed('link-connected', false);
+    document.getElementById('duplicates-list').style.display = 'none';
+    document.getElementById('duplicates-list').innerHTML     = '';
+    document.getElementById('search-input').value            = '';
+    document.getElementById('search-results').style.display  = 'none';
+    document.getElementById('search-results').innerHTML      = '';
+}
+
+// ── applyFocus ────────────────────────────────────────────────────────────────
+// Dims non-active nodes; keeps links that touch active nodes clearly visible.
+function applyFocus(activeIds, mode) {
+    const connectedLinkIdxs = new Set();
+    rawData.links.forEach((l, i) => {
+        const src = l.source.id !== undefined ? l.source.id : l.source;
+        const tgt = l.target.id !== undefined ? l.target.id : l.target;
+        if (activeIds.has(src) || activeIds.has(tgt)) connectedLinkIdxs.add(i);
+    });
+
+    node.classed('node-dimmed', d => !activeIds.has(d.id));
+    node.selectAll('circle')
+        .classed('highlight-duplicate', d => mode === 'duplicate' && activeIds.has(d.id))
+        .classed('highlight-search',    d => mode === 'search'    && activeIds.has(d.id));
+
+    link.each(function(d, i) {
+        const connected = connectedLinkIdxs.has(i);
+        d3.select(this)
+            .classed('link-dimmed',    !connected)
+            .classed('link-connected',  connected);
+    });
+}
+
+// ── Search ────────────────────────────────────────────────────────────────────
+function onSearchInput(query) {
+    const q = query.trim().toLowerCase();
+    const resultsEl = document.getElementById('search-results');
+    if (!q) { resetGraph(); return; }
+
+    const matched = rawData.nodes.filter(n =>
+        (n.name     && n.name.toLowerCase().includes(q))    ||
+        (n.id       && n.id.toLowerCase().includes(q))      ||
+        (n.version  && n.version.toLowerCase().includes(q)) ||
+        (n.metadata && n.metadata.artifactId && n.metadata.artifactId.toLowerCase().includes(q))
+    );
+
+    applyFocus(new Set(matched.map(n => n.id)), 'search');
+
+    resultsEl.innerHTML = '';
+    if (matched.length === 0) {
+        resultsEl.style.display = 'block';
+        resultsEl.innerHTML = '<div class="no-results">No matches found</div>';
+        return;
+    }
+    resultsEl.style.display = 'block';
+    matched.slice(0, 20).forEach(n => {
+        const item = document.createElement('div');
+        item.className = 'search-result-item';
+        const artName = (n.metadata && n.metadata.artifactId) ? n.metadata.artifactId : (n.name || n.id);
+        const ver     = n.version || '';
+        item.innerHTML = `<span class="search-result-name">${artName}</span><span class="search-result-version">${ver}</span>`;
+        item.onclick   = () => focusOnNode(n.id);
+        resultsEl.appendChild(item);
+    });
+    if (matched.length > 20) {
+        const more = document.createElement('div');
+        more.className   = 'no-results';
+        more.textContent = `… ${matched.length - 20} more`;
+        resultsEl.appendChild(more);
+    }
+}
+
+// Pin: zoom into the best matching node
+function pinSearch() {
+    const q = document.getElementById('search-input').value.trim().toLowerCase();
+    if (!q) return;
+    const match = rawData.nodes.find(n =>
+        (n.name    && n.name.toLowerCase().includes(q))    ||
+        (n.id      && n.id.toLowerCase().includes(q))      ||
+        (n.version && n.version.toLowerCase() === q)
+    );
+    if (match) focusOnNode(match.id);
+}
+
+// ── Duplicate Detection ───────────────────────────────────────────────────────
+function findDuplicates() {
+    const groups = {};
+    rawData.nodes.forEach(n => {
+        // Primary: use metadata (always set now for all nodes)
+        // Fallback: parse from id which is "groupId:artifactId:version"
+        let gId, aId;
+        if (n.metadata && n.metadata.groupId) {
+            gId = n.metadata.groupId;
+            aId = n.metadata.artifactId;
+        } else if (n.id && n.id.split(':').length >= 3) {
+            const parts = n.id.split(':');
+            gId = parts[0];
+            aId = parts[1];
+        }
+        if (gId && aId) {
+            const key = `${gId}:${aId}`;
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(n);
+        }
+    });
+
+    const dupKeys    = Object.keys(groups).filter(k => groups[k].length > 1);
+    const dupNodeIds = new Set();
+    dupKeys.forEach(k => groups[k].forEach(n => dupNodeIds.add(n.id)));
+
+    const listEl = document.getElementById('duplicates-list');
+    listEl.innerHTML = '';
+
+    if (dupKeys.length === 0) {
+        listEl.style.display = 'block';
+        listEl.innerHTML = '<div class="no-results">No duplicate versions found.</div>';
+        return;
+    }
+
+    // Focus graph: highlight duplicates, keep their edges bright
+    applyFocus(dupNodeIds, 'duplicate');
+
+    listEl.style.display = 'block';
+    listEl.innerHTML = `<div style="font-size:11px;color:#777;margin-bottom:8px">${dupKeys.length} conflict(s) found — click a version tag to zoom</div>`;
+    dupKeys.forEach(k => {
+        const item = document.createElement('div');
+        item.className = 'dup-item';
+        const artName = k.split(':')[1];
+        const tags = groups[k]
+            .map(n => `<span class="dup-version-tag" onclick="focusOnNode('${n.id}')">${n.version || n.id}</span>`)
+            .join('');
+        item.innerHTML = `<div class="dup-name">${artName}</div><div class="dup-versions">${tags}</div>`;
+        listEl.appendChild(item);
+    });
+}
+
+// ── Focus / zoom to a node ────────────────────────────────────────────────────
+function focusOnNode(nodeId) {
+    const n = rawData.nodes.find(x => x.id === nodeId);
+    if (!n) return;
+    const t = d3.zoomIdentity
+        .translate(width / 2, height / 2)
+        .scale(2.2)
+        .translate(-n.x, -n.y);
+    svgRoot.transition().duration(700).call(zoomBehavior.transform, t);
+}
+
+// ── Drag ──────────────────────────────────────────────────────────────────────
+function drag(sim) {
+    return d3.drag()
+        .on('start', (event) => {
+            if (!event.active) sim.alphaTarget(0.3).restart();
+            event.subject.fx = event.subject.x;
+            event.subject.fy = event.subject.y;
+        })
+        .on('drag', (event) => {
+            event.subject.fx = event.x;
+            event.subject.fy = event.y;
+        })
+        .on('end', (event) => {
+            if (!event.active) sim.alphaTarget(0);
+            event.subject.fx = null;
+            event.subject.fy = null;
+        });
+}
+""");
+        html.append("  </script>\n");
+        html.append("</body>\n");
+        html.append("</html>\n");
+
+        String finalHtml = html.toString();
+
+        if (!outputFile.getParentFile().exists()) {
+            outputFile.getParentFile().mkdirs();
+        }
         try (FileWriter writer = new FileWriter(outputFile)) {
             writer.write(finalHtml);
         }

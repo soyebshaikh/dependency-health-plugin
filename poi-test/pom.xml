@@ -14,6 +14,11 @@
             <version>5.2.5</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>5.5.1</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-core</artifactId>
             <version>4.1.1</version>
@@ -54,7 +59,18 @@
             <artifactId>grpc-api</artifactId>
             <version>1.60.1</version>
         </dependency>
+        <!-- Explicitly adding a nested/transitive dependency to test duplicate detection -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.21.1</version>
+        </dependency>
         <!-- Stress Test: Hall of Fame Vulnerabilities -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.14.1</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
@@ -137,7 +153,7 @@
             <plugin>
                 <groupId>io.github.soyebshaikh</groupId>
                 <artifactId>dependency-health-maven-plugin</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
+                <version>1.0.0</version>
                 <executions>
                     <execution>
                         <goals>
