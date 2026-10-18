@@ -1,3 +1,4 @@
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.soyebshaikh/dependency-health-maven-plugin.svg)](https://central.sonatype.com/artifact/io.github.soyebshaikh/dependency-health-maven-plugin)
 # Enterprise-Grade Maven Dependency Intelligence Plugin
 
 This plugin analyzes your Maven project dependencies (direct and transitive) during the build lifecycle to detect vulnerabilities, End-of-Life (EOL) components, and overall risk.
